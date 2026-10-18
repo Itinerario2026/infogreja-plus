@@ -173,28 +173,67 @@ ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de Acesso Público (Leitura para todos nos dados da comunidade)
+DROP POLICY IF EXISTS "Public Read Churches" ON public.churches;
 CREATE POLICY "Public Read Churches" ON public.churches FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Pastorals" ON public.pastorals;
 CREATE POLICY "Public Read Pastorals" ON public.pastorals FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Events" ON public.events;
 CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Activities" ON public.activities;
 CREATE POLICY "Public Read Activities" ON public.activities FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Notices" ON public.notices;
 CREATE POLICY "Public Read Notices" ON public.notices FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Groups" ON public.groups;
 CREATE POLICY "Public Read Groups" ON public.groups FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Schedules" ON public.schedules;
 CREATE POLICY "Public Read Schedules" ON public.schedules FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Read Programs" ON public.programs;
 CREATE POLICY "Public Read Programs" ON public.programs FOR SELECT USING (true);
 
 -- Permissão pública para envio de inscrições e contatos
+DROP POLICY IF EXISTS "Public Insert Registrations" ON public.registrations;
 CREATE POLICY "Public Insert Registrations" ON public.registrations FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Insert Contacts" ON public.contacts;
 CREATE POLICY "Public Insert Contacts" ON public.contacts FOR INSERT WITH CHECK (true);
 
 -- Políticas para Service Role / Admin (acesso completo)
+DROP POLICY IF EXISTS "Service Role All Churches" ON public.churches;
 CREATE POLICY "Service Role All Churches" ON public.churches FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Pastorals" ON public.pastorals;
 CREATE POLICY "Service Role All Pastorals" ON public.pastorals FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Events" ON public.events;
 CREATE POLICY "Service Role All Events" ON public.events FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Activities" ON public.activities;
 CREATE POLICY "Service Role All Activities" ON public.activities FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Notices" ON public.notices;
 CREATE POLICY "Service Role All Notices" ON public.notices FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Groups" ON public.groups;
 CREATE POLICY "Service Role All Groups" ON public.groups FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Schedules" ON public.schedules;
 CREATE POLICY "Service Role All Schedules" ON public.schedules FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Programs" ON public.programs;
 CREATE POLICY "Service Role All Programs" ON public.programs FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Registrations" ON public.registrations;
 CREATE POLICY "Service Role All Registrations" ON public.registrations FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Contacts" ON public.contacts;
 CREATE POLICY "Service Role All Contacts" ON public.contacts FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Admins" ON public.admins;
 CREATE POLICY "Service Role All Admins" ON public.admins FOR ALL USING (true) WITH CHECK (true);

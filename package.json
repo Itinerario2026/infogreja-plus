@@ -1,0 +1,27 @@
+{
+  "name": "infogreja-plus",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "postinstall": "npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client",
+    "start": "node server/src.js",
+    "db:generate": "node scripts/generate-sql.js",
+    "db:migrate": "node supabase/migrate.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

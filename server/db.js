@@ -1,0 +1,284 @@
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT_DIR = path.resolve(__dirname, "..");
+
+dotenv.config({ path: path.join(ROOT_DIR, ".env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
+
+const DB_FILE = path.join(__dirname, "data", "database.json");
+const DEFAULT_DB_FILE = path.join(__dirname, "data", "database.default.json");
+const ADMIN_FILE = path.join(__dirname, "data", "admin.json");
+
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://wxjzewhqbbvvarotpeyg.supabase.co";
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY);
+
+let supabase = null;
+if (isSupabaseConfigured) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false }
+  });
+}
+
+const PUBLIC_TABLES = [
+  "churches",
+  "pastorals",
+  "events",
+  "activities",
+  "notices",
+  "groups",
+  "schedules",
+  "programs"
+];
+
+const ALL_TABLES = [...PUBLIC_TABLES, "registrations", "contacts"];
+
+const collectionByType = {
+  church: "churches",
+  event: "events",
+  activity: "activities",
+  notice: "notices",
+  group: "groups",
+  schedule: "schedules",
+  program: "programs"
+};
+
+// Fallback JSON Helpers
+function readLocalDb() {
+  if (!fs.existsSync(DB_FILE)) {
+    if (fs.existsSync(DEFAULT_DB_FILE)) {
+      fs.copyFileSync(DEFAULT_DB_FILE, DB_FILE);
+    } else {
+      return {};
+    }
+  }
+  const data = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+  for (const field of ALL_TABLES) {
+    if (!Array.isArray(data[field])) data[field] = [];
+  }
+  return data;
+}
+
+function writeLocalDb(data) {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
+  } catch (err) {
+    console.warn("Aviso: Não foi possível gravar localmente em disco (esperado no Vercel serverless):", err.message);
+  }
+}
+
+export const db = {
+  async getPublicData() {
+    if (supabase) {
+      try {
+        const results = await Promise.all(
+          PUBLIC_TABLES.map(table => supabase.from(table).select("*"))
+        );
+        const data = {};
+        for (let i = 0; i < PUBLIC_TABLES.length; i++) {
+          const table = PUBLIC_TABLES[i];
+          const res = results[i];
+          if (res.error) throw res.error;
+          data[table] = res.data || [];
+        }
+        return data;
+      } catch (err) {
+        console.warn("Aviso ao buscar dados no Supabase, usando fallback local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    const { registrations, contacts, ...publicData } = local;
+    return publicData;
+  },
+
+  async getAdminData() {
+    if (supabase) {
+      try {
+        const results = await Promise.all(
+          ALL_TABLES.map(table => supabase.from(table).select("*"))
+        );
+        const data = {};
+        for (let i = 0; i < ALL_TABLES.length; i++) {
+          const table = ALL_TABLES[i];
+          const res = results[i];
+          if (res.error) throw res.error;
+          data[table] = res.data || [];
+        }
+        return data;
+      } catch (err) {
+        console.warn("Aviso ao buscar admin data no Supabase, usando fallback local:", err.message);
+      }
+    }
+    return readLocalDb();
+  },
+
+  async addRegistration(registration) {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("registrations").insert([registration]);
+        if (error) throw error;
+        return registration;
+      } catch (err) {
+        console.warn("Aviso ao salvar inscrição no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    local.registrations.push(registration);
+    writeLocalDb(local);
+    return registration;
+  },
+
+  async addContact(contact) {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("contacts").insert([contact]);
+        if (error) throw error;
+        return contact;
+      } catch (err) {
+        console.warn("Aviso ao salvar contato no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    local.contacts.push(contact);
+    writeLocalDb(local);
+    return contact;
+  },
+
+  async addContent(type, item) {
+    const table = collectionByType[type];
+    if (!table) throw new Error("Tipo de conteúdo inválido");
+
+    if (supabase) {
+      try {
+        const { error } = await supabase.from(table).insert([item]);
+        if (error) throw error;
+        return item;
+      } catch (err) {
+        console.warn(`Aviso ao adicionar conteúdo em ${table} no Supabase, gravando local:`, err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!local[table]) local[table] = [];
+    local[table].push(item);
+    writeLocalDb(local);
+    return item;
+  },
+
+  async updateChurch(id, payload) {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("churches").update(payload).eq("id", id).select().single();
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.warn("Aviso ao atualizar igreja no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    const idx = local.churches.findIndex(c => c.id === id);
+    if (idx < 0) return null;
+    local.churches[idx] = { ...local.churches[idx], ...payload };
+    writeLocalDb(local);
+    return local.churches[idx];
+  },
+
+  async updatePastoral(id, payload) {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("pastorals").update(payload).eq("id", id).select().single();
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.warn("Aviso ao atualizar pastoral no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    const idx = local.pastorals.findIndex(p => p.id === id);
+    if (idx < 0) return null;
+    local.pastorals[idx] = { ...local.pastorals[idx], ...payload };
+    writeLocalDb(local);
+    return local.pastorals[idx];
+  },
+
+  async deleteContent(type, id) {
+    const table = collectionByType[type];
+    if (!table) throw new Error("Tipo de conteúdo inválido");
+
+    if (supabase) {
+      try {
+        const { error } = await supabase.from(table).delete().eq("id", id);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.warn(`Aviso ao deletar ${table} no Supabase, deletando local:`, err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!local[table]) return false;
+    const initial = local[table].length;
+    local[table] = local[table].filter(item => item.id !== id);
+    writeLocalDb(local);
+    return local[table].length < initial;
+  },
+
+  async getAdmin(email) {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("admins").select("*").ilike("email", email).maybeSingle();
+        if (!error && data) return data;
+      } catch (err) {
+        console.warn("Aviso ao buscar admin no Supabase:", err.message);
+      }
+    }
+    if (!fs.existsSync(ADMIN_FILE)) return null;
+    try {
+      return JSON.parse(fs.readFileSync(ADMIN_FILE, "utf8"));
+    } catch {
+      return null;
+    }
+  },
+
+  async saveAdmin(email, passwordHash) {
+    const adminRecord = { email: email.toLowerCase(), passwordHash, createdAt: new Date().toISOString() };
+    if (supabase) {
+      try {
+        await supabase.from("admins").upsert([adminRecord], { onConflict: "email" });
+      } catch (err) {
+        console.warn("Aviso ao salvar admin no Supabase:", err.message);
+      }
+    }
+    try {
+      fs.writeFileSync(ADMIN_FILE, JSON.stringify(adminRecord, null, 2), "utf8");
+    } catch (err) {
+      console.warn("Aviso ao salvar admin local:", err.message);
+    }
+    return adminRecord;
+  },
+
+  async resetContent() {
+    const initial = JSON.parse(fs.readFileSync(DEFAULT_DB_FILE, "utf8"));
+    if (supabase) {
+      try {
+        for (const table of PUBLIC_TABLES) {
+          const items = initial[table] || [];
+          if (items.length > 0) {
+            await supabase.from(table).upsert(items, { onConflict: "id" });
+          }
+        }
+      } catch (err) {
+        console.warn("Aviso ao resetar no Supabase:", err.message);
+      }
+    }
+    const current = readLocalDb();
+    initial.registrations = current.registrations || [];
+    initial.contacts = current.contacts || [];
+    writeLocalDb(initial);
+    return true;
+  }
+};

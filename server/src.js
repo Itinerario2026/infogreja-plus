@@ -1,5 +1,4 @@
 import express from "express";
-import session from "express-session";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import bcrypt from "bcryptjs";
@@ -44,18 +43,54 @@ const app = express();
 app.disable("x-powered-by");
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(express.json({ limit: "250kb" }));
-app.use(session({
-  name: "infogreja.sid",
-  secret: getSessionSecret(),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production" && !process.env.DEV_OVERRIDE,
-    maxAge: 1000 * 60 * 60 * 8
+app.set("trust proxy", 1);
+
+// Sessão stateless: cookie assinado (HMAC). Funciona na Vercel (serverless),
+// onde a sessão em memória do express-session se perde entre requisições.
+const COOKIE_NAME = "infogreja.sid";
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 8;
+const SESSION_SECRET = getSessionSecret();
+const COOKIE_SECURE = (process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL)) && !process.env.DEV_OVERRIDE;
+
+function signValue(value) {
+  return crypto.createHmac("sha256", SESSION_SECRET).update(value).digest("base64url");
+}
+
+function createSessionToken(email) {
+  const payload = Buffer.from(JSON.stringify({ email, exp: Date.now() + SESSION_MAX_AGE_MS })).toString("base64url");
+  return `${payload}.${signValue(payload)}`;
+}
+
+function readSessionToken(token) {
+  if (!token || typeof token !== "string") return null;
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+  const expected = Buffer.from(signValue(payload));
+  const received = Buffer.from(signature);
+  if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data.email || !data.exp || data.exp < Date.now()) return null;
+    return data;
+  } catch {
+    return null;
   }
-}));
+}
+
+function parseCookies(header = "") {
+  return Object.fromEntries(
+    header.split(";").map(part => part.trim()).filter(Boolean).map(part => {
+      const i = part.indexOf("=");
+      return [part.slice(0, i), decodeURIComponent(part.slice(i + 1))];
+    })
+  );
+}
+
+app.use((req, _res, next) => {
+  const data = readSessionToken(parseCookies(req.headers.cookie)[COOKIE_NAME]);
+  req.session = data ? { admin: { email: data.email } } : {};
+  next();
+});
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -146,11 +181,14 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
       return res.status(401).json({ message: "E-mail ou senha inválidos." });
     }
 
-    req.session.regenerate(err => {
-      if (err) return res.status(500).json({ message: "Não foi possível iniciar a sessão." });
-      req.session.admin = { email: admin.email };
-      res.json({ email: admin.email });
+    res.cookie(COOKIE_NAME, createSessionToken(admin.email), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: COOKIE_SECURE,
+      path: "/",
+      maxAge: SESSION_MAX_AGE_MS
     });
+    res.json({ email: admin.email });
   } catch (err) {
     next(err);
   }
@@ -161,11 +199,9 @@ app.get("/api/auth/me", (req, res) => {
   res.json({ email: req.session.admin.email });
 });
 
-app.post("/api/auth/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("infogreja.sid");
-    res.json({ message: "Sessão encerrada." });
-  });
+app.post("/api/auth/logout", (_req, res) => {
+  res.clearCookie(COOKIE_NAME, { httpOnly: true, sameSite: "lax", secure: COOKIE_SECURE, path: "/" });
+  res.json({ message: "Sessão encerrada." });
 });
 
 app.get("/api/admin/data", requireAdmin, async (req, res, next) => {

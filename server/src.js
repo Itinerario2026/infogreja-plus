@@ -1,5 +1,4 @@
 import express from "express";
-import session from "express-session";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import bcrypt from "bcryptjs";
@@ -55,18 +54,53 @@ app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(express.json({ limit: "250kb" }));
-app.use(session({
-  name: "minha-paroquia.sid",
-  secret: getSessionSecret(),
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production" && !process.env.DEV_OVERRIDE,
-    maxAge: 1000 * 60 * 60 * 8
+
+// Sessão stateless via HMAC assinado: funciona perfeitamente na Vercel (serverless) e localmente
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 8;
+const SESSION_SECRET = getSessionSecret();
+const COOKIE_SECURE = (process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL)) && !process.env.DEV_OVERRIDE;
+
+function signValue(value) {
+  return crypto.createHmac("sha256", SESSION_SECRET).update(value).digest("base64url");
+}
+
+function createSessionToken(email) {
+  const payload = Buffer.from(JSON.stringify({ email, exp: Date.now() + SESSION_MAX_AGE_MS })).toString("base64url");
+  return `${payload}.${signValue(payload)}`;
+}
+
+function readSessionToken(token) {
+  if (!token || typeof token !== "string") return null;
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+  const expected = Buffer.from(signValue(payload));
+  const received = Buffer.from(signature);
+  if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data.email || !data.exp || data.exp < Date.now()) return null;
+    return data;
+  } catch {
+    return null;
   }
-}));
+}
+
+function parseCookies(header = "") {
+  return Object.fromEntries(
+    header.split(";").map(part => part.trim()).filter(Boolean).map(part => {
+      const i = part.indexOf("=");
+      return [part.slice(0, i), decodeURIComponent(part.slice(i + 1))];
+    })
+  );
+}
+
+app.use((req, _res, next) => {
+  const cookies = parseCookies(req.headers.cookie);
+  const token = cookies["minha-paroquia.sid"] || cookies["infogreja.sid"];
+  const data = readSessionToken(token);
+  req.session = data ? { admin: { email: data.email } } : {};
+  next();
+});
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -182,11 +216,18 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
       return res.status(401).json({ message: "E-mail ou senha inválidos." });
     }
 
-    req.session.regenerate(err => {
-      if (err) return res.status(500).json({ message: "Não foi possível iniciar a sessão." });
-      req.session.admin = { email: admin.email };
-      res.json({ email: admin.email });
-    });
+    const token = createSessionToken(admin.email);
+    const cookieOpts = {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: COOKIE_SECURE,
+      path: "/",
+      maxAge: SESSION_MAX_AGE_MS
+    };
+
+    res.cookie("minha-paroquia.sid", token, cookieOpts);
+    res.cookie("infogreja.sid", token, cookieOpts);
+    res.json({ email: admin.email });
   } catch (err) {
     next(err);
   }
@@ -224,8 +265,9 @@ app.post("/api/auth/recover", recoveryLimiter, async (req, res, next) => {
 
     await db.updateAdminPasswordAndRecovery(email, passwordHash, recoveryHash);
 
-    req.session?.destroy?.(() => {});
-    res.clearCookie("minha-paroquia.sid");
+    const clearOpts = { httpOnly: true, sameSite: "lax", secure: COOKIE_SECURE, path: "/" };
+    res.clearCookie("minha-paroquia.sid", clearOpts);
+    res.clearCookie("infogreja.sid", clearOpts);
     res.json({
       message: "Senha redefinida com sucesso. Guarde a nova chave de recuperação.",
       newRecoveryCode
@@ -240,11 +282,11 @@ app.get("/api/auth/me", (req, res) => {
   res.json({ email: req.session.admin.email });
 });
 
-app.post("/api/auth/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie("minha-paroquia.sid");
-    res.json({ message: "Sessão encerrada." });
-  });
+app.post("/api/auth/logout", (_req, res) => {
+  const clearOpts = { httpOnly: true, sameSite: "lax", secure: COOKIE_SECURE, path: "/" };
+  res.clearCookie("minha-paroquia.sid", clearOpts);
+  res.clearCookie("infogreja.sid", clearOpts);
+  res.json({ message: "Sessão encerrada." });
 });
 
 app.get("/api/admin/data", requireAdmin, async (req, res, next) => {
@@ -281,7 +323,7 @@ app.post("/api/admin/content", requireAdmin, async (req, res, next) => {
 
 app.put("/api/admin/churches/:id", requireAdmin, async (req, res, next) => {
   try {
-    const allowed = ["title", "subtitle", "description", "location", "phone", "email", "whatsapp", "instagram", "pastor", "map", "image"];
+    const allowed = ["title", "subtitle", "description", "location", "phone", "email", "whatsapp", "pastor", "map", "image", "instagram"];
     const payload = {};
     for (const key of allowed) {
       if (typeof req.body[key] === "string") payload[key] = req.body[key].trim();
@@ -324,7 +366,7 @@ app.delete("/api/admin/content/:type/:id", requireAdmin, async (req, res, next) 
 app.post("/api/admin/reset-content", requireAdmin, async (req, res, next) => {
   try {
     await db.resetContent();
-    res.json({ message: "Conteúdo de demonstração restaurado; inscrições e mensagens foram preservadas." });
+    res.json({ message: "Conteúdo restaurado com sucesso; inscrições e contatos preservados." });
   } catch (err) {
     next(err);
   }

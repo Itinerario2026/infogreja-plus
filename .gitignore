@@ -28,3 +28,6 @@ yarn-error.log*
 # Arquivos compactados temporários
 *.zip
 *.rar
+
+# Scripts em lote locais (Windows)
+*.bat

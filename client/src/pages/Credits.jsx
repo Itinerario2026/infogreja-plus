@@ -3,44 +3,51 @@ import PublicHeader from "../components/PublicHeader";
 import PublicFooter from "../components/PublicFooter";
 
 export default function Credits() {
-  // Dados do Professor Orientador
+  // Professor Orientador
   const professor = {
     name: "Prof. [Nome do Professor]",
-    role: "Professor Orientador & Coordenador do Projeto",
-    subject: "Tecnologia, Desenvolvimento de Sistemas & Projeto Integrador",
+    role: "Professor Orientador & Docente",
+    subject: "Tecnologia & Desenvolvimento de Sistemas",
     institution: "Itinerário Formativo 2026",
-    bio: "Supervisão técnica, pedagógica e orientação metodológica para o desenvolvimento de soluções digitais voltadas à integração e organização comunitária."
+    bio: "Supervisão acadêmica, orientação técnica em boas práticas de engenharia de software e acompanhamento metodológico do projeto."
   };
 
-  // Dados da Equipe / Alunos
+  // 5 Alunos Desenvolvedores (sendo 1 P.O. e 1 Scrum Master)
   const teamMembers = [
     {
       name: "Mario [Sobrenome]",
-      role: "Desenvolvedor Full Stack & Líder Técnico",
-      tag: "Full Stack",
-      contributions: "Arquitetura do sistema, integração React + Node.js, modelagem de dados no Supabase e pipeline de deploy na Vercel.",
-      initials: "M"
+      role: "Desenvolvedor & Product Owner (P.O.)",
+      tag: "Dev • P.O.",
+      contributions: "Definição da visão de produto, levantamento de requisitos, arquitetura do sistema e desenvolvimento full stack da plataforma.",
+      initials: "PO"
     },
     {
       name: "[Nome do Aluno 2]",
-      role: "Desenvolvedor Frontend & UI/UX",
-      tag: "Frontend",
-      contributions: "Desenvolvimento da interface responsiva, identidade visual, estilização com CSS moderno e navegação das paróquias.",
-      initials: "A2"
+      role: "Desenvolvedor & Scrum Master",
+      tag: "Dev • Scrum Master",
+      contributions: "Facilitação dos ritos ágeis, organização dos ciclos de desenvolvimento, remoção de impedimentos e desenvolvimento de código.",
+      initials: "SM"
     },
     {
       name: "[Nome do Aluno 3]",
-      role: "Desenvolvedor Backend & Banco de Dados",
-      tag: "Backend & DB",
-      contributions: "Estruturação das rotas de API, segurança, sessões stateless, migração SQL e persistência no Supabase Cloud.",
-      initials: "A3"
+      role: "Desenvolvedor Full Stack",
+      tag: "Dev Full Stack",
+      contributions: "Construção de componentes de interface reativa, usabilidade visual responsiva e integração de rotas com o frontend.",
+      initials: "DEV"
     },
     {
       name: "[Nome do Aluno 4]",
-      role: "Documentação, Conteúdo & Testes",
-      tag: "QA & Conteúdo",
-      contributions: "Levantamento das 12 comunidades e 156 pastorais, testes de usabilidade, documentação técnica e validação de requisitos.",
-      initials: "A4"
+      role: "Desenvolvedor Full Stack",
+      tag: "Dev Full Stack",
+      contributions: "Desenvolvimento de rotas de API, segurança, sessões stateless e comunicação com o banco de dados Supabase Cloud.",
+      initials: "DEV"
+    },
+    {
+      name: "[Nome do Aluno 5]",
+      role: "Desenvolvedor Full Stack",
+      tag: "Dev Full Stack",
+      contributions: "Estruturação dos dados e conteúdos das 12 paróquias e 156 pastorais, testes de usabilidade e validação de requisitos.",
+      initials: "DEV"
     }
   ];
 
@@ -83,7 +90,10 @@ export default function Credits() {
 
             <div className="advisor-card">
               <div className="advisor-avatar-box">
-                <span className="advisor-avatar-icon">🎓</span>
+                <svg className="advisor-avatar-svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
               </div>
               <div className="advisor-info">
                 <span className="advisor-role-badge">{professor.role}</span>
@@ -99,7 +109,7 @@ export default function Credits() {
             <div className="section-title-wrap">
               <span className="section-tag">Desenvolvimento & Execução</span>
               <h2>Equipe de Estudantes</h2>
-              <p>Alunos desenvolvedores responsáveis pela concepção, código e entrega da plataforma.</p>
+              <p>5 alunos desenvolvedores com papéis de Product Owner, Scrum Master e Desenvolvimento Full Stack.</p>
             </div>
 
             <div className="team-grid">

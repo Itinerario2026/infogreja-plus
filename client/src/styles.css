@@ -2964,7 +2964,7 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
 }
 
 /* ==========================================================================
-   NAVEGAÇÃO: Botão Admin & Link Créditos
+   NAVEGAÇÃO: Botão Admin & Link Créditos (Limpo e sem poluição visual)
    ========================================================================== */
 .nav-credits-link{
   color:#5e4b3e !important;
@@ -2975,37 +2975,30 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   color:#8f3110 !important;
 }
 
-.nav-admin-btn{
-  display:inline-flex !important;
-  align-items:center;
-  gap:6px;
+.nav-admin-link{
   padding:8px 16px !important;
   border-radius:999px !important;
-  background:linear-gradient(135deg, #8f3110 0%, #ba4d1b 100%) !important;
-  color:#fff !important;
+  background:#fffaf5 !important;
+  color:#8f3110 !important;
+  border:1px solid #ead6c2 !important;
   font-weight:750 !important;
   font-size:.8rem !important;
   letter-spacing:.02em;
-  border:1px solid rgba(143,49,16,.25) !important;
-  box-shadow:0 4px 14px rgba(143,49,16,.18);
   transition:all .2s ease;
 }
-.nav-admin-btn:hover{
-  background:linear-gradient(135deg, #74250a 0%, #9e3e12 100%) !important;
+.nav-admin-link:hover{
+  background:#8f3110 !important;
   color:#fff !important;
-  transform:translateY(-1px);
-  box-shadow:0 6px 18px rgba(143,49,16,.26);
-}
-.nav-admin-icon{
-  font-size:.85rem;
-  line-height:1;
+  border-color:#8f3110 !important;
+  box-shadow:0 4px 14px rgba(143,49,16,.18);
 }
 
 /* Mobile drawer adjustments */
 @media (max-width: 900px) {
-  .brand-header .nav.show .nav-admin-btn{
+  .brand-header .nav.show .nav-admin-link{
     margin-top:8px;
     justify-content:center;
+    text-align:center;
     width:100%;
     padding:12px 18px !important;
   }
@@ -3119,8 +3112,8 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   box-shadow:0 8px 20px rgba(143,49,16,.1);
   margin:0 auto;
 }
-.advisor-avatar-icon{
-  font-size:2.4rem;
+.advisor-avatar-svg{
+  color:#8f3110;
 }
 .advisor-role-badge{
   display:inline-block;

@@ -18,19 +18,13 @@ export default function PublicHeader() {
           </span>
         </Link>
 
-        <div className="header-identity">
-          <span className="header-dot"></span>
-          <span>Comunidades conectadas em um só lugar</span>
-        </div>
-
         <button className="menu-btn" onClick={() => setOpen(!open)} aria-label="Abrir menu">☰</button>
         <nav className={`nav ${open ? "show" : ""}`}>
           <Link to="/" onClick={close}>Início</Link>
-          <a href="/#igrejas" onClick={close} className="nav-cta">Paróquias</a>
-          <Link to="/creditos" onClick={close} className="nav-credits-link">Créditos</Link>
-          <Link to="/admin/login" onClick={close} className="nav-admin-btn">
-            <span className="nav-admin-icon" aria-hidden="true">⚙️</span>
-            <span>Área Admin</span>
+          <a href="/#igrejas" onClick={close}>Paróquias</a>
+          <Link to="/creditos" onClick={close}>Créditos</Link>
+          <Link to="/admin/login" onClick={close} className="nav-admin-link">
+            Área Admin
           </Link>
         </nav>
       </div>

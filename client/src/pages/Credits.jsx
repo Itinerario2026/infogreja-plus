@@ -5,7 +5,7 @@ import PublicFooter from "../components/PublicFooter";
 export default function Credits() {
   // Professor Orientador
   const professor = {
-    name: "Prof. [Nome do Professor]",
+    name: "Prof. João Roberto Ursino da Cruz",
     role: "Professor Orientador & Docente",
     subject: "Tecnologia & Desenvolvimento de Sistemas",
     institution: "Itinerário Formativo 2026",

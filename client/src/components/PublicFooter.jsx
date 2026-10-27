@@ -16,7 +16,9 @@ export default function PublicFooter({ context = "Minha Paróquia" }) {
         <div className="footer-nav-block">
           <span>Navegação</span>
           <Link to="/">Início</Link>
-          <a href="/#igrejas">Igrejas</a>
+          <a href="/#igrejas">Paróquias</a>
+          <Link to="/creditos">Créditos do Projeto</Link>
+          <Link to="/admin/login">Área do Administrador</Link>
         </div>
 
         <div className="footer-signature">

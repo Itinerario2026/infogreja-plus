@@ -2962,3 +2962,343 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   font-size:.84rem;
   line-height:1.55;
 }
+
+/* ==========================================================================
+   NAVEGAÇÃO: Botão Admin & Link Créditos
+   ========================================================================== */
+.nav-credits-link{
+  color:#5e4b3e !important;
+  font-weight:700 !important;
+  transition:color .2s ease;
+}
+.nav-credits-link:hover{
+  color:#8f3110 !important;
+}
+
+.nav-admin-btn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px;
+  padding:8px 16px !important;
+  border-radius:999px !important;
+  background:linear-gradient(135deg, #8f3110 0%, #ba4d1b 100%) !important;
+  color:#fff !important;
+  font-weight:750 !important;
+  font-size:.8rem !important;
+  letter-spacing:.02em;
+  border:1px solid rgba(143,49,16,.25) !important;
+  box-shadow:0 4px 14px rgba(143,49,16,.18);
+  transition:all .2s ease;
+}
+.nav-admin-btn:hover{
+  background:linear-gradient(135deg, #74250a 0%, #9e3e12 100%) !important;
+  color:#fff !important;
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(143,49,16,.26);
+}
+.nav-admin-icon{
+  font-size:.85rem;
+  line-height:1;
+}
+
+/* Mobile drawer adjustments */
+@media (max-width: 900px) {
+  .brand-header .nav.show .nav-admin-btn{
+    margin-top:8px;
+    justify-content:center;
+    width:100%;
+    padding:12px 18px !important;
+  }
+}
+
+/* ==========================================================================
+   PÁGINA DE CRÉDITOS & EQUIPE
+   ========================================================================== */
+.credits-page{
+  background:#fbf8f4;
+  min-height:80vh;
+  padding-bottom:80px;
+}
+
+.credits-hero{
+  background:
+    radial-gradient(circle at 10% 20%, rgba(234,192,152,.35), transparent 25%),
+    radial-gradient(circle at 90% 10%, rgba(211,119,55,.16), transparent 22%),
+    linear-gradient(180deg, #faf7f2 0%, #f3ece3 100%);
+  border-bottom:1px solid #ebdccb;
+  padding:42px 0 38px;
+}
+.credits-back-link{
+  display:inline-flex;
+  align-items:center;
+  font-size:.86rem;
+  font-weight:700;
+  color:#8f3110;
+  margin-bottom:16px;
+  transition:transform .2s ease;
+}
+.credits-back-link:hover{
+  transform:translateX(-3px);
+  color:#74250a;
+}
+.credits-hero-content h1{
+  font-size:clamp(2rem, 3.8vw, 3.2rem);
+  line-height:1.08;
+  color:#2c221c;
+  margin:8px 0 12px;
+}
+.credits-hero-content p{
+  max-width:680px;
+  color:#6b5a4d;
+  font-size:1.05rem;
+  line-height:1.6;
+}
+
+.credits-body{
+  display:grid;
+  gap:48px;
+  padding-top:44px;
+}
+
+.credits-section{
+  display:grid;
+  gap:22px;
+}
+
+.section-title-wrap{
+  border-bottom:1px solid #eadccd;
+  padding-bottom:14px;
+}
+.section-tag{
+  display:inline-block;
+  font-size:.72rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:#a5521d;
+  margin-bottom:6px;
+}
+.section-title-wrap h2{
+  font-size:1.6rem;
+  color:#2c221c;
+  margin:0 0 6px;
+}
+.section-title-wrap p{
+  color:#78695e;
+  font-size:.92rem;
+  margin:0;
+}
+
+/* Card do Professor Orientador */
+.advisor-card{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:26px;
+  align-items:center;
+  background:#fffdfb;
+  border:1px solid #eadfd1;
+  border-radius:24px;
+  padding:28px 32px;
+  box-shadow:0 12px 32px rgba(81,46,26,.06);
+}
+@media (max-width: 680px) {
+  .advisor-card{
+    grid-template-columns:1fr;
+    text-align:center;
+    padding:24px 20px;
+  }
+}
+.advisor-avatar-box{
+  width:84px;
+  height:84px;
+  border-radius:22px;
+  background:linear-gradient(135deg, #f7efe6 0%, #ecdccb 100%);
+  border:2px solid #dfc6af;
+  display:grid;
+  place-items:center;
+  box-shadow:0 8px 20px rgba(143,49,16,.1);
+  margin:0 auto;
+}
+.advisor-avatar-icon{
+  font-size:2.4rem;
+}
+.advisor-role-badge{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  background:#fceddf;
+  border:1px solid #f2d5be;
+  color:#9a4a15;
+  font-size:.74rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:8px;
+}
+.advisor-info h3{
+  font-size:1.45rem;
+  color:#281f18;
+  margin:0 0 4px;
+}
+.advisor-subject{
+  font-size:.94rem;
+  font-weight:700;
+  color:#8f3110;
+  margin:0 0 10px;
+}
+.advisor-bio{
+  color:#675649;
+  font-size:.94rem;
+  line-height:1.6;
+  margin:0;
+}
+
+/* Grid de Alunos / Equipe */
+.team-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(270px, 1fr));
+  gap:22px;
+}
+.team-card{
+  background:#fffdfb;
+  border:1px solid #eadfd1;
+  border-radius:22px;
+  padding:24px 22px;
+  box-shadow:0 10px 28px rgba(81,46,26,.05);
+  display:grid;
+  grid-template-rows:auto 1fr;
+  gap:16px;
+  transition:all .25s ease;
+}
+.team-card:hover{
+  transform:translateY(-3px);
+  border-color:#ddb590;
+  box-shadow:0 16px 36px rgba(81,46,26,.09);
+}
+.team-card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.member-avatar{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  background:linear-gradient(135deg, #8f3110 0%, #c4622b 100%);
+  color:#fff;
+  font-weight:800;
+  font-size:1.05rem;
+  display:grid;
+  place-items:center;
+  box-shadow:0 6px 14px rgba(143,49,16,.2);
+}
+.member-tag{
+  font-size:.72rem;
+  font-weight:800;
+  color:#8f3110;
+  background:#fbeee2;
+  border:1px solid #f2d9c4;
+  padding:4px 10px;
+  border-radius:999px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.team-card-body h3{
+  font-size:1.15rem;
+  color:#292019;
+  margin:0 0 4px;
+}
+.member-role{
+  display:block;
+  font-size:.85rem;
+  color:#8f3110;
+  margin-bottom:12px;
+  font-weight:700;
+}
+.member-contributions{
+  color:#6c5a4d;
+  font-size:.88rem;
+  line-height:1.55;
+  margin:0;
+}
+
+/* Grid de Tecnologias */
+.tech-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+  gap:18px;
+}
+.tech-card{
+  background:#fffdfb;
+  border:1px solid #ecdfd2;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 6px 20px rgba(81,46,26,.04);
+  transition:transform .2s ease;
+}
+.tech-card:hover{
+  transform:translateY(-2px);
+  border-color:#dcb089;
+}
+.tech-badge{
+  display:inline-block;
+  font-size:.7rem;
+  font-weight:800;
+  text-transform:uppercase;
+  color:#a0521f;
+  background:#fff5eb;
+  border:1px solid #fae2ce;
+  padding:3px 8px;
+  border-radius:6px;
+  margin-bottom:8px;
+}
+.tech-card h4{
+  font-size:1rem;
+  color:#292019;
+  margin:0 0 6px;
+}
+.tech-card p{
+  color:#705f52;
+  font-size:.84rem;
+  line-height:1.5;
+  margin:0;
+}
+
+/* Call to action de Admin na página de créditos */
+.credits-admin-cta{
+  background:linear-gradient(135deg, #fffaf5 0%, #f6ece0 100%);
+  border:1px solid #ebd9c8;
+  border-radius:24px;
+  padding:32px 36px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  box-shadow:0 12px 30px rgba(81,46,26,.06);
+}
+@media (max-width: 768px) {
+  .credits-admin-cta{
+    flex-direction:column;
+    text-align:center;
+    padding:26px 20px;
+  }
+}
+.admin-cta-copy h3{
+  font-size:1.35rem;
+  color:#2b211a;
+  margin:4px 0 6px;
+}
+.admin-cta-copy p{
+  color:#6c5c50;
+  font-size:.92rem;
+  margin:0;
+  max-width:560px;
+}
+.admin-cta-btn{
+  flex-shrink:0;
+  padding:12px 24px;
+  border-radius:999px;
+  font-weight:750;
+  font-size:.9rem;
+}
+

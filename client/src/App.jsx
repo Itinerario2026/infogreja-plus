@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import ChurchPage from "./pages/ChurchPage";
 import PastoralPage from "./pages/PastoralPage";
 import AdminPortal from "./pages/AdminPortal";
+import Credits from "./pages/Credits";
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/igrejas/:churchId" element={<ChurchPage />} />
       <Route path="/pastorais/:churchId/:pastoralSlug" element={<PastoralPage />} />
+      <Route path="/creditos" element={<Credits />} />
       <Route path="/admin" element={<AdminPortal />} />
       <Route path="/admin/login" element={<AdminPortal />} />
       <Route path="*" element={<Navigate to="/" replace />} />

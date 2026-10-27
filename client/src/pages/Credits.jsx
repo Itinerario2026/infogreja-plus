@@ -12,42 +12,42 @@ export default function Credits() {
     bio: "Supervisão acadêmica, orientação técnica em boas práticas de engenharia de software e acompanhamento metodológico do projeto."
   };
 
-  // 5 Alunos Desenvolvedores (sendo 1 P.O. e 1 Scrum Master)
+  // 5 Alunos Desenvolvedores (com P.O. e Scrum Master)
   const teamMembers = [
     {
-      name: "Mario [Sobrenome]",
+      name: "Juan Luis",
       role: "Desenvolvedor & Product Owner (P.O.)",
       tag: "Dev • P.O.",
-      contributions: "Definição da visão de produto, levantamento de requisitos, arquitetura do sistema e desenvolvimento full stack da plataforma.",
-      initials: "PO"
+      contributions: "Definição e visão do produto, levantamento e priorização de requisitos, histórias de usuário e desenvolvimento de software.",
+      initials: "JL"
     },
     {
-      name: "[Nome do Aluno 2]",
+      name: "Caio Freire",
       role: "Desenvolvedor & Scrum Master",
       tag: "Dev • Scrum Master",
-      contributions: "Facilitação dos ritos ágeis, organização dos ciclos de desenvolvimento, remoção de impedimentos e desenvolvimento de código.",
-      initials: "SM"
+      contributions: "Facilitação dos ritos ágeis, gestão dos ciclos de entrega, remoção de impedimentos da equipe e desenvolvimento de código.",
+      initials: "CF"
     },
     {
-      name: "[Nome do Aluno 3]",
+      name: "Mario Cesar",
       role: "Desenvolvedor Full Stack",
       tag: "Dev Full Stack",
-      contributions: "Construção de componentes de interface reativa, usabilidade visual responsiva e integração de rotas com o frontend.",
-      initials: "DEV"
+      contributions: "Arquitetura e integração full stack, sincronização do banco Supabase, deploy serverless na Vercel e regras de negócio da aplicação.",
+      initials: "MC"
     },
     {
-      name: "[Nome do Aluno 4]",
+      name: "Vitor Guilherme",
       role: "Desenvolvedor Full Stack",
       tag: "Dev Full Stack",
-      contributions: "Desenvolvimento de rotas de API, segurança, sessões stateless e comunicação com o banco de dados Supabase Cloud.",
-      initials: "DEV"
+      contributions: "Construção de componentes da interface, estilização visual responsiva e integração de dados das comunidades.",
+      initials: "VG"
     },
     {
-      name: "[Nome do Aluno 5]",
-      role: "Desenvolvedor Full Stack",
+      name: "Manuela Pires",
+      role: "Desenvolvedora Full Stack",
       tag: "Dev Full Stack",
-      contributions: "Estruturação dos dados e conteúdos das 12 paróquias e 156 pastorais, testes de usabilidade e validação de requisitos.",
-      initials: "DEV"
+      contributions: "Desenvolvimento de páginas e fluxos da aplicação, estruturação das 156 pastorais, testes de usabilidade e interface.",
+      initials: "MP"
     }
   ];
 
@@ -72,7 +72,7 @@ export default function Credits() {
               <span className="eyebrow">Projeto Acadêmico & Tecnológico</span>
               <h1>Créditos & Equipe do Projeto</h1>
               <p>
-                Conheça os estudantes e o professor orientador responsáveis pelo planejamento,
+                Conheça os estudantes desenvolvedores e o professor orientador responsáveis pelo planejamento,
                 design, desenvolvimento e implantação da plataforma <strong>Minha Paróquia</strong>.
               </p>
             </div>

@@ -3314,3 +3314,109 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   font-size:.9rem;
 }
 
+/* ==========================================================================
+   GERENCIADOR DE IMAGEM DA IGREJA NO ADMIN
+   ========================================================================== */
+.church-image-manager{
+  background:#fffdfa;
+  border:1px solid #ebdccb;
+  border-radius:18px;
+  padding:20px;
+  margin:12px 0 16px;
+  display:grid;
+  gap:12px;
+}
+.church-image-label{
+  font-size:.9rem;
+  font-weight:750;
+  color:#2c221c;
+}
+.church-image-preview-card{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:22px;
+  align-items:center;
+}
+@media(max-width:768px){
+  .church-image-preview-card{
+    grid-template-columns:1fr;
+  }
+}
+.church-image-preview-thumb{
+  width:100%;
+  height:140px;
+  border-radius:14px;
+  overflow:hidden;
+  border:2px solid #ecdac7;
+  background:#f4ebe1;
+  box-shadow:0 6px 18px rgba(75,46,20,.08);
+}
+.church-image-preview-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.church-image-controls{
+  display:grid;
+  gap:12px;
+}
+.church-image-help{
+  color:#705f52;
+  font-size:.86rem;
+  margin:0;
+}
+.church-image-btn-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.upload-image-btn{
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#8f3110 !important;
+  color:#fff !important;
+  font-weight:700 !important;
+  font-size:.86rem !important;
+  padding:9px 18px !important;
+  border-radius:999px !important;
+  transition:all .2s ease;
+  user-select:none;
+}
+.upload-image-btn:hover{
+  background:#74250a !important;
+  box-shadow:0 4px 14px rgba(143,49,16,.25);
+  transform:translateY(-1px);
+}
+.btn-outline-danger{
+  background:transparent;
+  color:#b83216;
+  border:1px solid #f0b8aa;
+  padding:8px 16px;
+  border-radius:999px;
+  font-size:.84rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.btn-outline-danger:hover{
+  background:#fcedea;
+  border-color:#b83216;
+}
+.church-image-url-label{
+  display:grid;
+  gap:5px;
+  font-size:.82rem;
+  color:#705f52;
+}
+.church-image-url-label input{
+  font-size:.86rem;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #ebd7c4;
+  background:#fff;
+}
+
+

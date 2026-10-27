@@ -195,6 +195,54 @@ export default function AdminDashboard() {
     scrollTo("dados-paroquia");
   }
 
+  function handleChurchImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFeedback("Por favor, selecione um arquivo de imagem válido (JPG, PNG ou WebP).");
+      return;
+    }
+
+    if (file.size > 12 * 1024 * 1024) {
+      setFeedback("A imagem é muito grande. Escolha uma foto com até 12MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 1400;
+        const maxH = 1050;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxW || height > maxH) {
+          if (width / height > maxW / maxH) {
+            height = Math.round((height * maxW) / width);
+            width = maxW;
+          } else {
+            width = Math.round((width * maxH) / height);
+            height = maxH;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const optimizedUrl = canvas.toDataURL("image/jpeg", 0.88);
+
+        setChurchForm(prev => ({ ...prev, image: optimizedUrl }));
+        setFeedback("Nova foto carregada! Clique em 'Salvar dados da paróquia' para aplicar.");
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   function chooseChurchPastorals(id) {
     changePastoralChurch(id);
     scrollTo("pastorais-admin");
@@ -358,7 +406,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="admin-parish-actions">
                     <button className="parish-action primary" onClick={() => chooseChurchForContent(church.id)}>+ Conteúdo</button>
-                    <button className="parish-action" onClick={() => chooseChurchForEdit(church.id)}>Editar dados</button>
+                    <button className="parish-action" onClick={() => chooseChurchForEdit(church.id)}>Editar dados e foto</button>
                     <button className="parish-action" onClick={() => chooseChurchPastorals(church.id)}>Pastorais</button>
                     <a className="parish-action" href={`/igrejas/${church.id}`} target="_blank" rel="noreferrer">Ver página ↗</a>
                   </div>
@@ -427,7 +475,50 @@ export default function AdminDashboard() {
               <label>Instagram<input placeholder="@perfil" value={churchForm.instagram} onChange={e=>setChurchForm({...churchForm,instagram:e.target.value})}/></label>
               <label>Responsável / Pároco<input value={churchForm.pastor} onChange={e=>setChurchForm({...churchForm,pastor:e.target.value})}/></label>
               <label>Link do mapa<input value={churchForm.map} onChange={e=>setChurchForm({...churchForm,map:e.target.value})}/></label>
-              <label className="wide-field">Caminho da imagem<input value={churchForm.image} onChange={e=>setChurchForm({...churchForm,image:e.target.value})}/></label>
+              <div className="wide-field church-image-manager">
+                <span className="church-image-label">Foto / Imagem de Capa da Paróquia</span>
+                <div className="church-image-preview-card">
+                  <div className="church-image-preview-thumb">
+                    <img
+                      src={churchForm.image?.replace("assets/img/", "/") || "/igreja1.svg"}
+                      alt={churchForm.title || "Prévia"}
+                    />
+                  </div>
+                  <div className="church-image-controls">
+                    <p className="church-image-help">
+                      Selecione uma nova foto do seu dispositivo para atualizar a imagem desta paróquia.
+                    </p>
+                    <div className="church-image-btn-row">
+                      <label className="btn btn-secondary upload-image-btn">
+                        <span>📷 Escolher foto do computador</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handleChurchImageUpload}
+                        />
+                      </label>
+                      {churchForm.image && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger"
+                          onClick={() => setChurchForm({ ...churchForm, image: "" })}
+                        >
+                          Remover foto
+                        </button>
+                      )}
+                    </div>
+                    <label className="church-image-url-label">
+                      <span>Ou cole um link / caminho de imagem:</span>
+                      <input
+                        placeholder="https://... ou /churches/exemplo.jpg"
+                        value={churchForm.image}
+                        onChange={e => setChurchForm({ ...churchForm, image: e.target.value })}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
               <button className="btn btn-primary">Salvar dados da paróquia</button>
             </form>
           </div>

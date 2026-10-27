@@ -53,7 +53,8 @@ const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(express.json({ limit: "250kb" }));
+app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // Sessão stateless via HMAC assinado: funciona perfeitamente na Vercel (serverless) e localmente
 const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 8;

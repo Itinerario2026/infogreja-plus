@@ -1,10 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title InfoGreja+ - Inicializador
+title Minha Paroquia - Inicializador
 
 echo ==============================================
-echo       INFOGREJA+ - REACT + NODE
+echo       MINHA PAROQUIA - REACT + NODE
 echo ==============================================
 echo.
 echo Pasta atual:
@@ -102,15 +102,20 @@ if not exist "server\data\admin.json" (
     goto erro
   )
   popd
+  echo.
+  echo IMPORTANTE: anote a chave de recuperacao exibida acima.
+  echo Ela sera necessaria se voce esquecer a senha.
+  echo.
+  pause
 )
 
 echo.
 echo Iniciando servidor Node...
-start "InfoGreja+ - API Node" cmd.exe /k call "%~dp0server\INICIAR_API.bat"
+start "Minha Paroquia - API Node" cmd.exe /k call "%~dp0server\INICIAR_API.bat"
 timeout /t 3 /nobreak >nul
 
 echo Iniciando React...
-start "InfoGreja+ - React" cmd.exe /k call "%~dp0client\INICIAR_REACT.bat"
+start "Minha Paroquia - React" cmd.exe /k call "%~dp0client\INICIAR_REACT.bat"
 timeout /t 5 /nobreak >nul
 
 echo Abrindo navegador...

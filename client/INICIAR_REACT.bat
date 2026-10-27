@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title InfoGreja+ - React
+title Minha Paroquia - React
 echo Iniciando React/Vite...
 call npm.cmd run dev
 if errorlevel 1 (

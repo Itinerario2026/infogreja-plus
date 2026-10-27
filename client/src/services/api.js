@@ -18,6 +18,7 @@ export const api = {
   register: payload => request("/public/registrations", { method: "POST", body: JSON.stringify(payload) }),
   contact: payload => request("/public/contacts", { method: "POST", body: JSON.stringify(payload) }),
   login: payload => request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+  recoverPassword: payload => request("/auth/recover", { method: "POST", body: JSON.stringify(payload) }),
   me: () => request("/auth/me"),
   logout: () => request("/auth/logout", { method: "POST" }),
   adminData: () => request("/admin/data"),

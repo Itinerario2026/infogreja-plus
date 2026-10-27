@@ -230,22 +230,52 @@ export const db = {
   async getAdmin(email) {
     if (supabase) {
       try {
-        const { data, error } = await supabase.from("admins").select("*").ilike("email", email).maybeSingle();
+        let query = supabase.from("admins").select("*");
+        if (email) {
+          query = query.ilike("email", email);
+        } else {
+          query = query.limit(1);
+        }
+        const { data, error } = await query.maybeSingle();
         if (!error && data) return data;
       } catch (err) {
         console.warn("Aviso ao buscar admin no Supabase:", err.message);
       }
     }
-    if (!fs.existsSync(ADMIN_FILE)) return null;
-    try {
-      return JSON.parse(fs.readFileSync(ADMIN_FILE, "utf8"));
-    } catch {
-      return null;
+    if (fs.existsSync(ADMIN_FILE)) {
+      try {
+        const local = JSON.parse(fs.readFileSync(ADMIN_FILE, "utf8"));
+        // Se achou local mas não no supabase, tenta sincronizar
+        if (supabase && local && (!email || local.email.toLowerCase() === email.toLowerCase())) {
+          supabase.from("admins").upsert([local], { onConflict: "email" }).catch(() => {});
+        }
+        return local;
+      } catch {
+        return null;
+      }
     }
+    return null;
   },
 
-  async saveAdmin(email, passwordHash) {
-    const adminRecord = { email: email.toLowerCase(), passwordHash, createdAt: new Date().toISOString() };
+  async saveAdmin(adminInput, maybePasswordHash) {
+    let adminRecord;
+    if (typeof adminInput === "string") {
+      adminRecord = {
+        email: adminInput.toLowerCase(),
+        passwordHash: maybePasswordHash,
+        createdAt: new Date().toISOString()
+      };
+    } else {
+      adminRecord = {
+        email: adminInput.email.toLowerCase(),
+        passwordHash: adminInput.passwordHash,
+        recoveryHash: adminInput.recoveryHash || null,
+        createdAt: adminInput.createdAt || new Date().toISOString(),
+        passwordUpdatedAt: adminInput.passwordUpdatedAt || null,
+        recoveryUpdatedAt: adminInput.recoveryUpdatedAt || null
+      };
+    }
+
     if (supabase) {
       try {
         await supabase.from("admins").upsert([adminRecord], { onConflict: "email" });
@@ -259,6 +289,37 @@ export const db = {
       console.warn("Aviso ao salvar admin local:", err.message);
     }
     return adminRecord;
+  },
+
+  async updateAdminPasswordAndRecovery(email, passwordHash, recoveryHash) {
+    const now = new Date().toISOString();
+    const updatePayload = {
+      passwordHash,
+      recoveryHash,
+      passwordUpdatedAt: now,
+      recoveryUpdatedAt: now
+    };
+
+    if (supabase) {
+      try {
+        await supabase.from("admins").update(updatePayload).ilike("email", email);
+      } catch (err) {
+        console.warn("Aviso ao atualizar credenciais no Supabase:", err.message);
+      }
+    }
+
+    try {
+      if (fs.existsSync(ADMIN_FILE)) {
+        const current = JSON.parse(fs.readFileSync(ADMIN_FILE, "utf8"));
+        fs.writeFileSync(ADMIN_FILE, JSON.stringify({
+          ...current,
+          ...updatePayload
+        }, null, 2), "utf8");
+      }
+    } catch (err) {
+      console.warn("Aviso ao atualizar admin local:", err.message);
+    }
+    return true;
   },
 
   async resetContent() {

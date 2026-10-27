@@ -155,9 +155,16 @@ CREATE TABLE IF NOT EXISTS public.admins (
   "id" SERIAL PRIMARY KEY,
   "email" TEXT UNIQUE NOT NULL,
   "passwordHash" TEXT NOT NULL,
+  "recoveryHash" TEXT,
+  "passwordUpdatedAt" TEXT,
+  "recoveryUpdatedAt" TEXT,
   "createdAt" TEXT,
   "created_at" TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.admins ADD COLUMN IF NOT EXISTS "recoveryHash" TEXT;
+ALTER TABLE public.admins ADD COLUMN IF NOT EXISTS "passwordUpdatedAt" TEXT;
+ALTER TABLE public.admins ADD COLUMN IF NOT EXISTS "recoveryUpdatedAt" TEXT;
 
 -- Habilitar RLS em todas as tabelas
 ALTER TABLE public.churches ENABLE ROW LEVEL SECURITY;

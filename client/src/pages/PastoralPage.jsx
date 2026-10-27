@@ -25,7 +25,7 @@ export default function PastoralPage() {
 
   if (error) return <div className="center-message">{error}</div>;
   if (!data) return <div className="center-message">Carregando pastoral...</div>;
-  if (!church || !pastoral) return <div className="center-message">Pastoral não encontrada. <Link to="/">Voltar ao InfoGreja+</Link></div>;
+  if (!church || !pastoral) return <div className="center-message">Pastoral não encontrada. <Link to="/">Voltar ao Minha Paróquia</Link></div>;
 
   const filter = items => (items || []).filter(x => x.churchId === church.id && x.pastoralId === pastoral.id);
   const events = filter(data.events);

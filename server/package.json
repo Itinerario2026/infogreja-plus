@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --watch src.js",
     "start": "node src.js",
-    "setup-admin": "node setup-admin.js"
+    "setup-admin": "node setup-admin.js",
+    "reset-admin": "node reset-admin.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

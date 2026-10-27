@@ -22,12 +22,22 @@ function getSessionSecret() {
     fs.writeFileSync(SECRET_FILE, secret, { mode: 0o600 });
     return secret;
   } catch {
-    return "infogreja-plus-default-session-secret-change-in-env";
+    return "minha-paroquia-session-secret-production";
   }
 }
 
 function id(prefix) {
   return `${prefix}${Date.now()}${crypto.randomInt(100, 999)}`;
+}
+
+function makeRecoveryCode() {
+  const raw = crypto.randomBytes(12).toString("hex").toUpperCase();
+  return `MP-${raw.slice(0, 4)}-${raw.slice(4, 8)}-${raw.slice(8, 12)}-${raw.slice(12, 16)}-${raw.slice(16, 20)}-${raw.slice(20, 24)}`;
+}
+
+function safeEqualText(a, b) {
+  const hash = value => crypto.createHash("sha256").update(String(value || "")).digest();
+  return crypto.timingSafeEqual(hash(a), hash(b));
 }
 
 const collectionByType = {
@@ -42,10 +52,11 @@ const collectionByType = {
 
 const app = express();
 app.disable("x-powered-by");
+app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(express.json({ limit: "250kb" }));
 app.use(session({
-  name: "infogreja.sid",
+  name: "minha-paroquia.sid",
   secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
@@ -63,6 +74,14 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Muitas tentativas de login. Aguarde alguns minutos." }
+});
+
+const recoveryLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000,
+  limit: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Muitas tentativas de recuperação. Aguarde alguns minutos." }
 });
 
 function requireAdmin(req, res, next) {
@@ -99,7 +118,17 @@ app.post("/api/public/registrations", async (req, res, next) => {
     if (pastoralId && !publicData.pastorals.some(p => p.id === pastoralId && p.churchId === churchId)) {
       return res.status(400).json({ message: "Pastoral inválida para esta igreja." });
     }
-    const registration = { id: id("r"), churchId, pastoralId, item, name, phone, email, note, createdAt: new Date().toISOString() };
+    const registration = {
+      id: id("r"),
+      churchId,
+      pastoralId,
+      item,
+      name,
+      phone,
+      email,
+      note,
+      createdAt: new Date().toISOString()
+    };
     await db.addRegistration(registration);
     res.status(201).json({ message: "Inscrição realizada com sucesso." });
   } catch (err) {
@@ -120,7 +149,15 @@ app.post("/api/public/contacts", async (req, res, next) => {
     if (pastoralId && !publicData.pastorals.some(p => p.id === pastoralId && p.churchId === churchId)) {
       return res.status(400).json({ message: "Pastoral inválida para esta igreja." });
     }
-    const contact = { id: id("m"), churchId, pastoralId, name, email, message, createdAt: new Date().toISOString() };
+    const contact = {
+      id: id("m"),
+      churchId,
+      pastoralId,
+      name,
+      email,
+      message,
+      createdAt: new Date().toISOString()
+    };
     await db.addContact(contact);
     res.status(201).json({ message: "Mensagem enviada com sucesso." });
   } catch (err) {
@@ -132,14 +169,13 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
   try {
     const email = String(req.body.email || "").trim().toLowerCase();
     const password = String(req.body.password || "");
-    const admin = await db.getAdmin(email);
 
+    const admin = await db.getAdmin(email);
     if (!admin) {
-      return res.status(401).json({ message: "Administrador não encontrado ou credenciais inválidas." });
+      return res.status(503).json({ message: "Administrador ainda não configurado. Execute INICIAR_SITE.bat." });
     }
 
-    const emailHash = value => crypto.createHash("sha256").update(value).digest();
-    const emailOk = crypto.timingSafeEqual(emailHash(email), emailHash(admin.email));
+    const emailOk = safeEqualText(email, admin.email);
     const passwordOk = emailOk ? await bcrypt.compare(password, admin.passwordHash) : false;
 
     if (!emailOk || !passwordOk) {
@@ -156,6 +192,49 @@ app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
   }
 });
 
+app.post("/api/auth/recover", recoveryLimiter, async (req, res, next) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const recoveryCode = String(req.body.recoveryCode || "").trim().toUpperCase();
+    const newPassword = String(req.body.newPassword || "");
+
+    if (!email || !recoveryCode || newPassword.length < 8) {
+      return res.status(400).json({ message: "Informe e-mail, chave de recuperação e uma nova senha com pelo menos 8 caracteres." });
+    }
+
+    const admin = await db.getAdmin(email);
+    if (!admin) {
+      return res.status(503).json({ message: "Administrador ainda não configurado." });
+    }
+    if (!admin.recoveryHash) {
+      return res.status(409).json({ message: "A recuperação ainda não está configurada para este administrador. Execute REDEFINIR_SENHA.bat no computador do sistema." });
+    }
+
+    const emailOk = safeEqualText(email, admin.email);
+    const recoveryOk = emailOk ? await bcrypt.compare(recoveryCode, admin.recoveryHash) : false;
+    if (!emailOk || !recoveryOk) {
+      return res.status(401).json({ message: "E-mail ou chave de recuperação inválidos." });
+    }
+
+    const newRecoveryCode = makeRecoveryCode();
+    const [passwordHash, recoveryHash] = await Promise.all([
+      bcrypt.hash(newPassword, 12),
+      bcrypt.hash(newRecoveryCode, 12)
+    ]);
+
+    await db.updateAdminPasswordAndRecovery(email, passwordHash, recoveryHash);
+
+    req.session?.destroy?.(() => {});
+    res.clearCookie("minha-paroquia.sid");
+    res.json({
+      message: "Senha redefinida com sucesso. Guarde a nova chave de recuperação.",
+      newRecoveryCode
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get("/api/auth/me", (req, res) => {
   if (!req.session?.admin?.email) return res.status(401).json({ message: "Não autenticado." });
   res.json({ email: req.session.admin.email });
@@ -163,7 +242,7 @@ app.get("/api/auth/me", (req, res) => {
 
 app.post("/api/auth/logout", (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie("infogreja.sid");
+    res.clearCookie("minha-paroquia.sid");
     res.json({ message: "Sessão encerrada." });
   });
 });
@@ -202,7 +281,7 @@ app.post("/api/admin/content", requireAdmin, async (req, res, next) => {
 
 app.put("/api/admin/churches/:id", requireAdmin, async (req, res, next) => {
   try {
-    const allowed = ["title", "subtitle", "description", "location", "phone", "email", "whatsapp", "pastor", "map", "image", "instagram"];
+    const allowed = ["title", "subtitle", "description", "location", "phone", "email", "whatsapp", "instagram", "pastor", "map", "image"];
     const payload = {};
     for (const key of allowed) {
       if (typeof req.body[key] === "string") payload[key] = req.body[key].trim();
@@ -245,7 +324,7 @@ app.delete("/api/admin/content/:type/:id", requireAdmin, async (req, res, next) 
 app.post("/api/admin/reset-content", requireAdmin, async (req, res, next) => {
   try {
     await db.resetContent();
-    res.json({ message: "Conteúdo restaurado com sucesso; inscrições e contatos preservados." });
+    res.json({ message: "Conteúdo de demonstração restaurado; inscrições e mensagens foram preservadas." });
   } catch (err) {
     next(err);
   }

@@ -1,0 +1,10 @@
+MINHA PARÓQUIA — RECUPERAÇÃO DE SENHA
+
+1. No primeiro acesso, o sistema cria uma CHAVE DE RECUPERAÇÃO.
+2. Guarde essa chave fora da pasta do sistema, em local seguro.
+3. Se esquecer a senha, clique em “Esqueci minha senha” na tela do Admin.
+4. Informe o e-mail, a chave e a nova senha.
+5. Após recuperar, o sistema gera uma NOVA chave; a chave antiga deixa de funcionar.
+6. Se perder também a chave, execute REDEFINIR_SENHA.bat localmente.
+
+A chave nunca é armazenada em texto puro pelo sistema.

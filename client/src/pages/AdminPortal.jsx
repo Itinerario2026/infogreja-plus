@@ -31,8 +31,8 @@ export default function AdminPortal() {
     return (
       <div className="admin-status-page">
         <div className="admin-status-card">
-          <span className="brand-mark">✦</span>
-          <h1>InfoGreja+ • Administração</h1>
+          <img className="admin-status-logo" src="/logo-minha-paroquia.jpg" alt="Minha Paróquia"/>
+          <h1>Minha Paróquia • Administração</h1>
           <p>Verificando acesso...</p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export default function AdminPortal() {
           <h1>Não foi possível abrir o Admin</h1>
           <p>{error}</p>
           <p className="admin-status-help">
-            Confirme se a janela <strong>InfoGreja+ - API Node</strong> está aberta e se
+            Confirme se a janela <strong>Minha Paróquia - API Node</strong> está aberta e se
             <code> http://localhost:3001/api/health </code> responde no navegador.
           </p>
           <button className="btn btn-primary" onClick={checkSession}>Tentar novamente</button>

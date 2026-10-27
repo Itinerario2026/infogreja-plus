@@ -32,15 +32,54 @@ const emptyForm = {
 };
 
 const emptyPastoralForm = {
-  description:"",
-  coordinator:"",
-  phone:"",
-  whatsapp:"",
-  email:"",
-  meetingDay:"",
-  meetingTime:"",
-  location:""
+  description: "",
+  coordinator: "",
+  phone: "",
+  whatsapp: "",
+  email: "",
+  meetingDay: "",
+  meetingTime: "",
+  location: ""
 };
+
+const emptyChurchForm = {
+  title: "",
+  subtitle: "",
+  description: "",
+  location: "",
+  phone: "",
+  email: "",
+  whatsapp: "",
+  instagram: "",
+  pastor: "",
+  map: "",
+  image: ""
+};
+
+const toChurchForm = c => ({
+  title: c?.title || "",
+  subtitle: c?.subtitle || "",
+  description: c?.description || "",
+  location: c?.location || "",
+  phone: c?.phone || "",
+  email: c?.email || "",
+  whatsapp: c?.whatsapp || "",
+  instagram: c?.instagram || "",
+  pastor: c?.pastor || "",
+  map: c?.map || "",
+  image: c?.image || ""
+});
+
+const toPastoralForm = p => ({
+  description: p?.description || "",
+  coordinator: p?.coordinator || "",
+  phone: p?.phone || "",
+  whatsapp: p?.whatsapp || "",
+  email: p?.email || "",
+  meetingDay: p?.meetingDay || "",
+  meetingTime: p?.meetingTime || "",
+  location: p?.location || ""
+});
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -48,6 +87,9 @@ export default function AdminDashboard() {
   const [form, setForm] = useState(emptyForm);
   const [feedback, setFeedback] = useState("");
   const [fatalError, setFatalError] = useState("");
+
+  const [churchEditId, setChurchEditId] = useState("");
+  const [churchForm, setChurchForm] = useState(emptyChurchForm);
 
   const [pastoralChurchId, setPastoralChurchId] = useState("");
   const [pastoralId, setPastoralId] = useState("");
@@ -75,15 +117,26 @@ export default function AdminDashboard() {
       setData(safeData);
 
       const firstChurch = safeData.churches[0]?.id || "";
-      setForm(f => ({ ...f, churchId: f.churchId || firstChurch }));
+      setForm(current => ({ ...current, churchId: current.churchId || firstChurch }));
 
-      setPastoralChurchId(current => current || firstChurch);
-      const currentChurch = pastoralChurchId || firstChurch;
-      const firstPastoral = safeData.pastorals.find(p => p.churchId === currentChurch);
-      const desiredId = pastoralId || firstPastoral?.id || "";
-      setPastoralId(desiredId);
-      const selected = safeData.pastorals.find(p => p.id === desiredId);
-      if (selected) setPastoralForm(toPastoralForm(selected));
+      setChurchEditId(current => {
+        const desired = current || firstChurch;
+        const selected = safeData.churches.find(c => c.id === desired) || safeData.churches[0];
+        setChurchForm(toChurchForm(selected));
+        return selected?.id || "";
+      });
+
+      setPastoralChurchId(current => {
+        const desiredChurch = current || firstChurch;
+        const firstPastoral = safeData.pastorals.find(p => p.churchId === desiredChurch);
+        setPastoralId(currentPastoral => {
+          const validCurrent = safeData.pastorals.find(p => p.id === currentPastoral && p.churchId === desiredChurch);
+          const selected = validCurrent || firstPastoral;
+          setPastoralForm(toPastoralForm(selected));
+          return selected?.id || "";
+        });
+        return desiredChurch;
+      });
     } catch (err) {
       if (err.status === 401) {
         window.location.href = "/admin";
@@ -106,7 +159,7 @@ export default function AdminDashboard() {
     return (
       <div className="admin-status-page">
         <div className="admin-status-card">
-          <span className="brand-mark">!</span>
+          <img className="admin-status-logo" src="/logo-minha-paroquia.jpg" alt="Minha Paróquia" />
           <h1>Erro ao carregar o dashboard</h1>
           <p>{fatalError}</p>
           <button className="btn btn-primary" onClick={load}>Tentar novamente</button>
@@ -119,9 +172,33 @@ export default function AdminDashboard() {
   if (!data) return <div className="center-message">Carregando área administrativa...</div>;
 
   const churchName = id => data.churches.find(c => c.id === id)?.title || "-";
-  const pastoralName = id => data.pastorals.find(p => p.id === id)?.title || "Geral da igreja";
+  const pastoralName = id => data.pastorals.find(p => p.id === id)?.title || "Geral da paróquia";
   const formPastorals = data.pastorals.filter(p => p.churchId === form.churchId);
   const editPastorals = data.pastorals.filter(p => p.churchId === pastoralChurchId);
+
+  const churchContentCount = id => content.filter(x => x.churchId === id).length;
+  const churchPastoralCount = id => data.pastorals.filter(p => p.churchId === id).length;
+
+  function scrollTo(id) {
+    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior:"smooth", block:"start" }), 50);
+  }
+
+  function chooseChurchForContent(id) {
+    setForm(current => ({ ...current, churchId:id, pastoralId:"" }));
+    scrollTo("cadastro");
+  }
+
+  function chooseChurchForEdit(id) {
+    const selected = data.churches.find(c => c.id === id);
+    setChurchEditId(id);
+    setChurchForm(toChurchForm(selected));
+    scrollTo("dados-paroquia");
+  }
+
+  function chooseChurchPastorals(id) {
+    changePastoralChurch(id);
+    scrollTo("pastorais-admin");
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -129,7 +206,20 @@ export default function AdminDashboard() {
     try {
       await api.addContent({ ...form, pastoralId: form.pastoralId || "" });
       setFeedback("Conteúdo cadastrado com sucesso.");
-      setForm({ ...emptyForm, churchId: data.churches[0]?.id || "" });
+      setForm(current => ({ ...emptyForm, churchId: current.churchId || data.churches[0]?.id || "" }));
+      await load();
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  }
+
+  async function saveChurch(e) {
+    e.preventDefault();
+    if (!churchEditId) return;
+    setFeedback("");
+    try {
+      await api.updateChurch(churchEditId, churchForm);
+      setFeedback("Dados da paróquia atualizados com sucesso.");
       await load();
     } catch (err) {
       setFeedback(err.message);
@@ -157,6 +247,12 @@ export default function AdminDashboard() {
     } catch (err) {
       setFeedback(err.message);
     }
+  }
+
+  function changeChurchEdit(id) {
+    setChurchEditId(id);
+    const selected = data.churches.find(c => c.id === id);
+    setChurchForm(toChurchForm(selected));
   }
 
   function changePastoralChurch(id) {
@@ -189,13 +285,21 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className="admin-layout minha-paroquia-admin">
       <aside className="sidebar">
-        <div className="brand admin-brand"><span className="brand-mark">+</span><span>InfoGreja+ Admin</span></div>
+        <div className="admin-brand-lockup">
+          <img src="/logo-minha-paroquia.jpg" alt="Minha Paróquia" className="admin-brand-logo" />
+          <div>
+            <strong>Minha Paróquia</strong>
+            <span>Administração</span>
+          </div>
+        </div>
         <nav className="sidebar-nav">
           <a href="#dashboard">📊 Dashboard</a>
-          <a href="#cadastro">➕ Conteúdo</a>
-          <a href="#pastorais-admin">⛪ Pastorais</a>
+          <a href="#paroquias">⛪ Paróquias</a>
+          <a href="#cadastro">➕ Novo conteúdo</a>
+          <a href="#dados-paroquia">✎ Dados da paróquia</a>
+          <a href="#pastorais-admin">🤝 Pastorais</a>
           <a href="#conteudos">🗂 Conteúdos</a>
           <a href="#inscricoes">📝 Inscrições</a>
           <a href="#mensagens">✉️ Mensagens</a>
@@ -206,17 +310,20 @@ export default function AdminDashboard() {
 
       <main className="admin-main">
         <section id="dashboard">
-          <div className="admin-top">
+          <div className="admin-top admin-top-brand">
             <div>
-              <span className="eyebrow">InfoGreja+ • área protegida</span>
+              <span className="eyebrow">Minha Paróquia • área protegida</span>
               <h1>Dashboard</h1>
               <p className="admin-user">Conectado como {user?.email}</p>
             </div>
-            <button className="btn btn-secondary" onClick={reset}>Restaurar conteúdo demo</button>
+            <div className="admin-top-actions">
+              <a className="btn btn-secondary" href="/">Ver site</a>
+              <button className="btn btn-secondary" onClick={reset}>Restaurar conteúdo demo</button>
+            </div>
           </div>
 
-          <div className="dashboard-cards infogreja-metrics">
-            <Metric label="Igrejas" value={data.churches.length}/>
+          <div className="dashboard-cards minha-paroquia-metrics">
+            <Metric label="Paróquias" value={data.churches.length}/>
             <Metric label="Pastorais" value={data.pastorals.length}/>
             <Metric label="Conteúdos" value={content.length}/>
             <Metric label="Inscrições" value={data.registrations.length}/>
@@ -226,22 +333,57 @@ export default function AdminDashboard() {
 
         {feedback && <div className="admin-feedback">{feedback}</div>}
 
+        <section className="admin-section" id="paroquias">
+          <div className="admin-section-heading-pro">
+            <div>
+              <span className="eyebrow">Acesso rápido</span>
+              <h2>Gerenciar por paróquia</h2>
+              <p>Escolha uma comunidade para cadastrar conteúdo, editar informações, administrar pastorais ou abrir sua página pública.</p>
+            </div>
+          </div>
+
+          <div className="admin-parish-grid">
+            {data.churches.map(church => (
+              <article className="admin-parish-card" key={church.id}>
+                <div className="admin-parish-image">
+                  <img src={church.image?.replace("assets/img/", "/") || "/igreja1.svg"} alt={church.title}/>
+                  <span>{churchPastoralCount(church.id)} pastorais</span>
+                </div>
+                <div className="admin-parish-body">
+                  <h3>{church.title}</h3>
+                  <p>📍 {church.location || "Endereço a cadastrar"}</p>
+                  <div className="admin-parish-stats">
+                    <span><strong>{churchContentCount(church.id)}</strong> conteúdos</span>
+                    <span><strong>{data.registrations.filter(r => r.churchId === church.id).length}</strong> inscrições</span>
+                  </div>
+                  <div className="admin-parish-actions">
+                    <button className="parish-action primary" onClick={() => chooseChurchForContent(church.id)}>+ Conteúdo</button>
+                    <button className="parish-action" onClick={() => chooseChurchForEdit(church.id)}>Editar dados</button>
+                    <button className="parish-action" onClick={() => chooseChurchPastorals(church.id)}>Pastorais</button>
+                    <a className="parish-action" href={`/igrejas/${church.id}`} target="_blank" rel="noreferrer">Ver página ↗</a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="admin-section" id="cadastro">
           <div className="panel">
             <div className="panel-heading">
               <span className="eyebrow">Novo conteúdo</span>
-              <h2>Cadastrar para uma igreja ou pastoral</h2>
-              <p>Use “Geral da igreja” para conteúdo da unidade. Se escolher uma pastoral, o conteúdo aparecerá apenas na página dela.</p>
+              <h2>Cadastrar conteúdo da paróquia</h2>
+              <p>Use “Geral da paróquia” para conteúdo da comunidade. Se escolher uma pastoral, o conteúdo aparecerá apenas na página dela.</p>
             </div>
             <form className="admin-form" onSubmit={submit}>
-              <label>Igreja
+              <label>Paróquia
                 <select value={form.churchId} onChange={e => setForm({...form, churchId:e.target.value, pastoralId:""})}>
                   {data.churches.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </label>
               <label>Pastoral
                 <select value={form.pastoralId} onChange={e => setForm({...form, pastoralId:e.target.value})}>
-                  <option value="">Geral da igreja</option>
+                  <option value="">Geral da paróquia</option>
                   {formPastorals.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               </label>
@@ -261,6 +403,36 @@ export default function AdminDashboard() {
           </div>
         </section>
 
+        <section className="admin-section" id="dados-paroquia">
+          <div className="panel parish-edit-panel">
+            <div className="panel-heading">
+              <span className="eyebrow">Informações públicas</span>
+              <h2>Editar dados da paróquia</h2>
+              <p>Atualize nome, endereço, contatos, Instagram e demais informações exibidas na página pública.</p>
+            </div>
+
+            <form className="admin-form church-admin-form" onSubmit={saveChurch}>
+              <label>Paróquia
+                <select value={churchEditId} onChange={e => changeChurchEdit(e.target.value)}>
+                  {data.churches.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </label>
+              <label>Nome público<input required value={churchForm.title} onChange={e=>setChurchForm({...churchForm,title:e.target.value})}/></label>
+              <label>Subtítulo<input value={churchForm.subtitle} onChange={e=>setChurchForm({...churchForm,subtitle:e.target.value})}/></label>
+              <label className="wide-field">Descrição<textarea rows="3" value={churchForm.description} onChange={e=>setChurchForm({...churchForm,description:e.target.value})}/></label>
+              <label className="wide-field">Endereço<input value={churchForm.location} onChange={e=>setChurchForm({...churchForm,location:e.target.value})}/></label>
+              <label>Telefone<input value={churchForm.phone} onChange={e=>setChurchForm({...churchForm,phone:e.target.value})}/></label>
+              <label>WhatsApp<input placeholder="55 + DDD + número" value={churchForm.whatsapp} onChange={e=>setChurchForm({...churchForm,whatsapp:e.target.value})}/></label>
+              <label>E-mail<input type="email" value={churchForm.email} onChange={e=>setChurchForm({...churchForm,email:e.target.value})}/></label>
+              <label>Instagram<input placeholder="@perfil" value={churchForm.instagram} onChange={e=>setChurchForm({...churchForm,instagram:e.target.value})}/></label>
+              <label>Responsável / Pároco<input value={churchForm.pastor} onChange={e=>setChurchForm({...churchForm,pastor:e.target.value})}/></label>
+              <label>Link do mapa<input value={churchForm.map} onChange={e=>setChurchForm({...churchForm,map:e.target.value})}/></label>
+              <label className="wide-field">Caminho da imagem<input value={churchForm.image} onChange={e=>setChurchForm({...churchForm,image:e.target.value})}/></label>
+              <button className="btn btn-primary">Salvar dados da paróquia</button>
+            </form>
+          </div>
+        </section>
+
         <section className="admin-section" id="pastorais-admin">
           <div className="panel">
             <div className="panel-heading">
@@ -270,7 +442,7 @@ export default function AdminDashboard() {
             </div>
 
             <form className="admin-form pastoral-admin-form" onSubmit={savePastoral}>
-              <label>Igreja
+              <label>Paróquia
                 <select value={pastoralChurchId} onChange={e => changePastoralChurch(e.target.value)}>
                   {data.churches.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
@@ -280,7 +452,7 @@ export default function AdminDashboard() {
                   {editPastorals.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               </label>
-              <label>Descrição
+              <label className="wide-field">Descrição
                 <textarea rows="3" value={pastoralForm.description} onChange={e=>setPastoralForm({...pastoralForm,description:e.target.value})}/>
               </label>
               <label>Responsável / Coordenador<input value={pastoralForm.coordinator} onChange={e=>setPastoralForm({...pastoralForm,coordinator:e.target.value})}/></label>
@@ -300,7 +472,7 @@ export default function AdminDashboard() {
             <div className="panel-heading"><span className="eyebrow">Gerenciamento</span><h2>Conteúdos cadastrados</h2></div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Igreja</th><th>Pastoral</th><th>Tipo</th><th>Título</th><th>Data</th><th>Ação</th></tr></thead>
+                <thead><tr><th>Paróquia</th><th>Pastoral</th><th>Tipo</th><th>Título</th><th>Data</th><th>Ação</th></tr></thead>
                 <tbody>
                   {content.length ? content.map(x => (
                     <tr key={`${x._type}-${x.id}`}>
@@ -323,7 +495,7 @@ export default function AdminDashboard() {
             <div className="panel-heading"><span className="eyebrow">Participantes</span><h2>Inscrições recebidas</h2></div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Igreja</th><th>Pastoral</th><th>Evento/Atividade</th><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Data</th></tr></thead>
+                <thead><tr><th>Paróquia</th><th>Pastoral</th><th>Evento/Atividade</th><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Data</th></tr></thead>
                 <tbody>
                   {data.registrations.length ? [...data.registrations].reverse().map(r => (
                     <tr key={r.id}>
@@ -345,7 +517,7 @@ export default function AdminDashboard() {
             <div className="panel-heading"><span className="eyebrow">Contato</span><h2>Mensagens recebidas</h2></div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Igreja</th><th>Pastoral</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Data</th></tr></thead>
+                <thead><tr><th>Paróquia</th><th>Pastoral</th><th>Nome</th><th>E-mail</th><th>Mensagem</th><th>Data</th></tr></thead>
                 <tbody>
                   {data.contacts.length ? [...data.contacts].reverse().map(m => (
                     <tr key={m.id}>
@@ -363,19 +535,6 @@ export default function AdminDashboard() {
       </main>
     </div>
   );
-}
-
-function toPastoralForm(p) {
-  return {
-    description:p.description || "",
-    coordinator:p.coordinator || "",
-    phone:p.phone || "",
-    whatsapp:p.whatsapp || "",
-    email:p.email || "",
-    meetingDay:p.meetingDay || "",
-    meetingTime:p.meetingTime || "",
-    location:p.location || ""
-  };
 }
 
 function Metric({ label, value }) {

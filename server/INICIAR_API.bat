@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title InfoGreja+ - API Node
+title Minha Paroquia - API Node
 echo Iniciando API Node...
 call npm.cmd run dev
 if errorlevel 1 (

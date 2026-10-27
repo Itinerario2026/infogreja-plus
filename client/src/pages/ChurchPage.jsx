@@ -40,7 +40,7 @@ export default function ChurchPage() {
 
   if (error) return <div className="center-message">{error}</div>;
   if (!data) return <div className="center-message">Carregando igreja...</div>;
-  if (!church) return <div className="center-message">Igreja não encontrada. <Link to="/">Voltar ao InfoGreja+</Link></div>;
+  if (!church) return <div className="center-message">Paróquia não encontrada. <Link to="/">Voltar ao Minha Paróquia</Link></div>;
 
   const schedules = generalByChurch(data.schedules, church.id);
   const programs = generalByChurch(data.programs, church.id);
@@ -76,10 +76,10 @@ export default function ChurchPage() {
           <div className="container church-page-hero-grid">
             <div className="church-page-image">
               <img src={church.image?.replace("assets/img/", "/") || "/igreja1.svg"} alt={church.title}/>
-              <span className="church-page-image-label">InfoGreja+</span>
+              <span className="church-page-image-label">Minha Paróquia</span>
             </div>
             <div className="church-page-heading">
-              <Link className="church-page-back" to="/">← Todas as igrejas</Link>
+              <Link className="church-page-back" to="/">← Todas as paróquias</Link>
               <span className="eyebrow">Comunidade</span>
               <h1>{church.title}</h1>
               <p>{church.description}</p>

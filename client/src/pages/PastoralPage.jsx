@@ -84,7 +84,6 @@ export default function PastoralPage() {
           <div className="container pastoral-hero-grid">
             <div>
               <Link className="pastoral-back" to={`/igrejas/${church.id}?aba=pastorais`}>← Voltar para {church.title}</Link>
-              <span className="pastoral-big-icon">{pastoral.icon || "⛪"}</span>
               <span className="eyebrow light">Pastoral • {church.title}</span>
               <h1>{pastoral.title}</h1>
               <p>{pastoral.description}</p>
@@ -92,10 +91,11 @@ export default function PastoralPage() {
                 {isMusicPastoral && (
                   <button
                     type="button"
-                    className="btn btn-music-suggest-hero"
+                    className="btn btn-primary btn-music-suggest-hero"
                     onClick={() => setMusicModalOpen(true)}
                   >
-                    🎵 Sugerir Música para a Missa
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    <span>Sugerir música para a missa</span>
                   </button>
                 )}
                 <a href={isMusicPastoral ? "#repertorio-musical" : "#agenda"} className="btn btn-light">
@@ -115,39 +115,33 @@ export default function PastoralPage() {
 
         <section className="pastoral-mini-nav">
           <div className="container">
-            {isMusicPastoral && <a href="#repertorio-musical" className="highlight-nav-music">🎵 Repertório & Sugestões</a>}
-            <a href="#agenda">📅 Agenda</a>
-            <a href="#eventos-pastoral">🎟 Eventos</a>
-            <a href="#atividades-pastoral">🤝 Atividades</a>
-            <a href="#grupos-pastoral">👥 Grupos</a>
-            <a href="#avisos-pastoral">📢 Avisos</a>
-            <a href="#contato-pastoral">💬 Contato</a>
+            {isMusicPastoral && <a href="#repertorio-musical" className="highlight-nav-music">Repertório Litúrgico</a>}
+            <a href="#agenda">Agenda</a>
+            <a href="#eventos-pastoral">Eventos</a>
+            <a href="#atividades-pastoral">Atividades</a>
+            <a href="#grupos-pastoral">Grupos</a>
+            <a href="#avisos-pastoral">Avisos</a>
+            <a href="#contato-pastoral">Contato</a>
           </div>
         </section>
 
         {isMusicPastoral && (
-          <PastoralSection id="repertorio-musical" alt eyebrow="Música & Liturgia" title="Repertório das Celebrações & Sugestões">
-            <div className="music-hero-banner">
-              <div className="music-banner-copy">
-                <span className="eyebrow">Participe com sua sugestão</span>
-                <h3>Deseja sugerir uma música para tocar na missa?</h3>
+          <PastoralSection id="repertorio-musical" alt eyebrow="Música Sacra & Liturgia" title="Repertório das Celebrações">
+            <div className="music-liturgy-header-card">
+              <div className="music-liturgy-header-text">
                 <p>
-                  Envie sua canção para o ministério de música de {church.title}. A coordenação analisa cada sugestão
-                  para incluir nas celebrações litúrgicas e encontros da comunidade.
+                  Canções selecionadas e aprovadas pela coordenação para as celebrações em {church.title}.
+                  Você pode sugerir novas músicas litúrgicas para os momentos da Santa Missa.
                 </p>
               </div>
               <button
                 type="button"
-                className="btn btn-primary btn-lg-music"
+                className="btn btn-primary btn-suggest-clean"
                 onClick={() => setMusicModalOpen(true)}
               >
-                🎵 Sugerir uma Música para Tocar
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span>Sugerir música para a missa</span>
               </button>
-            </div>
-
-            <div className="music-section-subtitle">
-              <h3>Músicas Selecionadas & Repertório da Comunidade ({churchApprovedMusic.length})</h3>
-              <p>Canções aprovadas pela coordenação para as celebrações e momentos de louvor.</p>
             </div>
 
             {churchApprovedMusic.length > 0 ? (
@@ -163,11 +157,15 @@ export default function PastoralPage() {
                       {m.audioUrl && (
                         <button
                           type="button"
-                          className="music-cover-play-btn"
-                          title="Tocar prévia da música"
+                          className={`music-cover-play-btn ${playingTrackId === m.id ? "is-active" : ""}`}
+                          title={playingTrackId === m.id ? "Pausar" : "Ouvir trecho"}
                           onClick={() => toggleAudio(m.id)}
                         >
-                          {playingTrackId === m.id ? "⏸" : "▶"}
+                          {playingTrackId === m.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          )}
                         </button>
                       )}
                     </div>
@@ -175,7 +173,7 @@ export default function PastoralPage() {
                       {m.moment && <span className="music-moment-pill">{m.moment}</span>}
                       <h4 className="music-title">{m.title}</h4>
                       {m.artist && <span className="music-artist">{m.artist}</span>}
-                      {m.note && <p className="music-note">"{m.note}"</p>}
+                      {m.note && <p className="music-note">“{m.note}”</p>}
                       <div className="music-card-footer">
                         <small>Sugerido por: <strong>{m.suggestedBy || "Comunidade"}</strong></small>
                         {m.audioUrl && (
@@ -184,7 +182,7 @@ export default function PastoralPage() {
                             className="music-play-text-btn"
                             onClick={() => toggleAudio(m.id)}
                           >
-                            {playingTrackId === m.id ? "Pausar prévia" : "Ouvir trecho"}
+                            {playingTrackId === m.id ? "Pausar" : "Ouvir trecho"}
                           </button>
                         )}
                       </div>
@@ -198,16 +196,18 @@ export default function PastoralPage() {
                 ))}
               </div>
             ) : (
-              <div className="empty-music-box">
-                <span className="empty-music-icon">🎵</span>
+              <div className="empty-music-card">
+                <div className="empty-music-icon-wrap">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                </div>
                 <h4>Nenhuma música no repertório ainda</h4>
-                <p>Seja o primeiro a sugerir uma canção bonita para ser tocada nas celebrações de {church.title}!</p>
+                <p>Envie uma sugestão de música litúrgica para ser tocada nas celebrações de {church.title}.</p>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary btn-empty-suggest"
                   onClick={() => setMusicModalOpen(true)}
                 >
-                  + Enviar primeira sugestão
+                  Enviar sugestão de música
                 </button>
               </div>
             )}
@@ -258,13 +258,13 @@ export default function PastoralPage() {
               <span className="eyebrow light">Contato da pastoral</span>
               <h2>{pastoral.title}</h2>
               <div className="pastoral-contact-list">
-                <span>👤 {pastoral.coordinator || "Responsável a cadastrar"}</span>
-                <span>📞 {pastoral.phone || "Telefone a cadastrar"}</span>
-                {pastoral.email && <span>✉️ {pastoral.email}</span>}
+                <div className="contact-detail-row"><span className="contact-meta-label">Coordenação:</span> <strong>{pastoral.coordinator || "A cadastrar"}</strong></div>
+                <div className="contact-detail-row"><span className="contact-meta-label">Telefone:</span> <strong>{pastoral.phone || "A cadastrar"}</strong></div>
+                {pastoral.email && <div className="contact-detail-row"><span className="contact-meta-label">E-mail:</span> <strong>{pastoral.email}</strong></div>}
               </div>
               <div className="contact-actions">
-                {hasWhatsapp && <a className="btn whatsapp-btn" target="_blank" rel="noreferrer" href={`https://wa.me/${pastoral.whatsapp}`}>💬 WhatsApp</a>}
-                {pastoral.email && <a className="btn btn-light" href={`mailto:${pastoral.email}`}>✉️ E-mail</a>}
+                {hasWhatsapp && <a className="btn whatsapp-btn" target="_blank" rel="noreferrer" href={`https://wa.me/${pastoral.whatsapp}`}>Conversar no WhatsApp</a>}
+                {pastoral.email && <a className="btn btn-light" href={`mailto:${pastoral.email}`}>Enviar E-mail</a>}
               </div>
             </div>
             <form className="public-contact-form" onSubmit={sendContact}>

@@ -95,7 +95,7 @@ export default function PastoralPage() {
                     onClick={() => setMusicModalOpen(true)}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                    <span>Sugerir música para a missa</span>
+                    <span>Sugerir música para celebração</span>
                   </button>
                 )}
                 <a href={isMusicPastoral ? "#repertorio-musical" : "#agenda"} className="btn btn-light">
@@ -131,7 +131,7 @@ export default function PastoralPage() {
               <div className="music-liturgy-header-text">
                 <p>
                   Canções selecionadas e aprovadas pela coordenação para as celebrações em {church.title}.
-                  Você pode sugerir novas músicas litúrgicas para os momentos da Santa Missa.
+                  Você pode sugerir novas canções para os momentos de louvor e celebração da comunidade.
                 </p>
               </div>
               <button
@@ -140,7 +140,7 @@ export default function PastoralPage() {
                 onClick={() => setMusicModalOpen(true)}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                <span>Sugerir música para a missa</span>
+                <span>Sugerir música para celebração</span>
               </button>
             </div>
 

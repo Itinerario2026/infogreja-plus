@@ -192,7 +192,7 @@ export default function MusicSuggestionModal({ churchId, pastoralId, churchTitle
                 <form className="modal-search-row" onSubmit={handleSearch}>
                   <input
                     type="text"
-                    placeholder="Digite o título ou cantor (ex: Segura na Mão de Deus, Vida Reluz)..."
+                    placeholder="Digite o título da música ou artista..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     autoFocus
@@ -272,7 +272,7 @@ export default function MusicSuggestionModal({ churchId, pastoralId, churchTitle
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Como És Lindo"
+                    placeholder="Título da música"
                     value={form.title}
                     onChange={e => setForm({ ...form, title: e.target.value })}
                   />
@@ -282,7 +282,7 @@ export default function MusicSuggestionModal({ churchId, pastoralId, churchTitle
                   <span>Cantor / Artista / Compositor</span>
                   <input
                     type="text"
-                    placeholder="Ex: Vida Reluz, Pe. Zezinho"
+                    placeholder="Nome do artista, banda ou ministério"
                     value={form.artist}
                     onChange={e => setForm({ ...form, artist: e.target.value })}
                   />
@@ -306,7 +306,7 @@ export default function MusicSuggestionModal({ churchId, pastoralId, churchTitle
                   <span>Seu nome ou ministério (opcional)</span>
                   <input
                     type="text"
-                    placeholder="Ex: Maria Clara ou Coral Santa Cecília"
+                    placeholder="Seu nome ou grupo (opcional)"
                     value={form.suggestedBy}
                     onChange={e => setForm({ ...form, suggestedBy: e.target.value })}
                   />
@@ -346,7 +346,7 @@ export default function MusicSuggestionModal({ churchId, pastoralId, churchTitle
                 <span>Observação para a equipe de liturgia (opcional)</span>
                 <textarea
                   rows="2"
-                  placeholder="Ex: Sugestão para a missa dominical das 19h..."
+                  placeholder="Deixe uma observação ou detalhe para a equipe (opcional)..."
                   value={form.note}
                   onChange={e => setForm({ ...form, note: e.target.value })}
                 />

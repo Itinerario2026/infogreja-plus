@@ -745,7 +745,7 @@ export default function AdminDashboard() {
                   <div className="music-admin-filter-bar">
                     <div className="filter-title-group">
                       <h3>Sugestões para esta comunidade ({filteredChurchMusic.length})</h3>
-                      <span className="filter-subtitle">Músicas pendentes aguardando moderação.</span>
+                      <span className="filter-subtitle">Revise, aprove ou recuse canções sugeridas para o repertório.</span>
                     </div>
 
                     <div className="music-filter-controls">
@@ -765,8 +765,9 @@ export default function AdminDashboard() {
 
                   {filteredChurchMusic.length === 0 ? (
                     <div className="empty-music-admin">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                       <h4>Nenhuma sugestão encontrada</h4>
-                      <p>As canções enviadas pelos fiéis na página da Pastoral de Música aparecerão aqui para aprovação.</p>
+                      <p>As canções enviadas na página da Pastoral de Música desta comunidade aparecerão aqui para moderação.</p>
                     </div>
                   ) : (
                     <div className="music-admin-cards-grid">
@@ -777,7 +778,9 @@ export default function AdminDashboard() {
                               {item.image ? (
                                 <img src={item.image} alt={item.title} />
                               ) : (
-                                <div className="music-thumb-placeholder">Música</div>
+                                <div className="music-thumb-placeholder">
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                                </div>
                               )}
                             </div>
                             <div className="music-admin-card-meta">
@@ -787,17 +790,17 @@ export default function AdminDashboard() {
                                   {item.status === "approved" ? "Aprovada" : item.status === "rejected" ? "Recusada" : "Pendente"}
                                 </span>
                               </div>
-                              <h4>{item.title}</h4>
+                              <h4 className="music-title-heading">{item.title}</h4>
                               {item.artist && <span className="artist-name">{item.artist}</span>}
                               <small className="suggester-info">
-                                Enviada por: <strong>{item.suggestedBy || "Fiel"}</strong> • {item.createdAt ? new Date(item.createdAt).toLocaleDateString("pt-BR") : "Recentemente"}
+                                Enviada por: <strong>{item.suggestedBy || "Membro da comunidade"}</strong> • {item.createdAt ? new Date(item.createdAt).toLocaleDateString("pt-BR") : "Recentemente"}
                               </small>
                             </div>
                           </div>
 
                           {item.note && (
                             <div className="music-admin-note">
-                              <strong>Mensagem do fiel:</strong> “{item.note}”
+                              <strong>Observação enviada:</strong> “{item.note}”
                             </div>
                           )}
 
@@ -817,7 +820,17 @@ export default function AdminDashboard() {
                                 className="btn btn-secondary btn-audio-admin"
                                 onClick={() => toggleAdminAudio(item.id)}
                               >
-                                {adminPlayingAudioId === item.id ? "Pausar prévia" : "Ouvir trecho (30s)"}
+                                {adminPlayingAudioId === item.id ? (
+                                  <>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                                    <span>Pausar prévia</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    <span>Ouvir trecho (30s)</span>
+                                  </>
+                                )}
                               </button>
                               {adminPlayingAudioId === item.id && (
                                 <audio src={item.audioUrl} autoPlay controls onEnded={() => setAdminPlayingAudioId(null)} />
@@ -827,10 +840,10 @@ export default function AdminDashboard() {
 
                           <div className="music-admin-actions-box">
                             <label className="feedback-label">
-                              <span>Feedback / Observação do Administrador:</span>
+                              <span>Feedback / Observação da Coordenação:</span>
                               <input
                                 type="text"
-                                placeholder="Ex: Aprovada para a missa de domingo..."
+                                placeholder="Deixe um comentário da equipe de moderação (opcional)..."
                                 value={feedbackMap[item.id] !== undefined ? feedbackMap[item.id] : (item.adminFeedback || "")}
                                 onChange={e => setFeedbackMap(prev => ({ ...prev, [item.id]: e.target.value }))}
                               />
@@ -842,14 +855,16 @@ export default function AdminDashboard() {
                                 className={`decision-btn btn-sim ${item.status === "approved" ? "is-selected" : ""}`}
                                 onClick={() => handleApproveMusic(item)}
                               >
-                                Sim (Aprovar)
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>Aprovar</span>
                               </button>
                               <button
                                 type="button"
                                 className={`decision-btn btn-nao ${item.status === "rejected" ? "is-selected" : ""}`}
                                 onClick={() => handleRejectMusic(item)}
                               >
-                                Não (Recusar)
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <span>Recusar</span>
                               </button>
                               <button
                                 type="button"
@@ -857,7 +872,8 @@ export default function AdminDashboard() {
                                 onClick={() => handleDeleteMusic(item.id)}
                                 title="Excluir do sistema"
                               >
-                                Excluir
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <span>Excluir</span>
                               </button>
                             </div>
                           </div>

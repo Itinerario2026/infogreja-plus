@@ -24,11 +24,21 @@ export default function PastoralPage() {
     loadData();
   }, []);
 
-  const church = useMemo(() => data?.churches.find(c => c.id === churchId), [data, churchId]);
+  const church = useMemo(() => data?.churches?.find(c => c.id === churchId), [data, churchId]);
   const pastoral = useMemo(
     () => data?.pastorals?.find(p => p.churchId === churchId && p.slug === pastoralSlug),
     [data, churchId, pastoralSlug]
   );
+  const churchApprovedMusic = useMemo(() => {
+    if (!data?.music_suggestions || !church?.id) return [];
+    return data.music_suggestions.filter(
+      m => m.churchId === church.id && m.status === "approved"
+    );
+  }, [data, church?.id]);
+
+  function toggleAudio(id) {
+    setPlayingTrackId(current => current === id ? null : id);
+  }
 
   if (error) return <div className="center-message">{error}</div>;
   if (!data) return <div className="center-message">Carregando pastoral...</div>;
@@ -46,16 +56,6 @@ export default function PastoralPage() {
     pastoral.title?.toLowerCase().includes("músic") ||
     pastoral.title?.toLowerCase().includes("music") ||
     pastoral.title?.toLowerCase().includes("canto");
-
-  const churchApprovedMusic = useMemo(() => {
-    return (data?.music_suggestions || []).filter(
-      m => m.churchId === church.id && m.status === "approved"
-    );
-  }, [data, church.id]);
-
-  function toggleAudio(id) {
-    setPlayingTrackId(current => current === id ? null : id);
-  }
 
   async function sendContact(e) {
     e.preventDefault();

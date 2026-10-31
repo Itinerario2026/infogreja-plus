@@ -3007,5 +3007,39 @@
       "meetingTime": "A definir",
       "location": "Na comunidade"
     }
+  ],
+  "music_suggestions": [
+    {
+      "id": "m-sample-1",
+      "churchId": "c1",
+      "pastoralId": "c1-pastoral-musicos",
+      "title": "Segura Na Mão de Deus",
+      "artist": "Padre Marcelo Rossi",
+      "suggestedBy": "Ministério de Música",
+      "moment": "Entrada / Acolhida",
+      "note": "Música de acolhida para as celebrações dominicais.",
+      "image": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/a2/81/92/a2819249-f457-0afc-bd5f-f401f49ff830/5099750297827.jpg/300x300bb.jpg",
+      "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/d0/eb/03/d0eb039b-7b05-db28-7b4c-f9e1edafb189/mzaf_13629890371380580514.plus.aac.p.m4a",
+      "externalUrl": "https://music.apple.com",
+      "status": "approved",
+      "adminFeedback": "Aprovada para o repertório oficial.",
+      "createdAt": "2026-10-31T02:35:17.259Z"
+    },
+    {
+      "id": "m-sample-2",
+      "churchId": "c1",
+      "pastoralId": "c1-pastoral-musicos",
+      "title": "Ninguém Te Ama Como Eu",
+      "artist": "Martín Valverde",
+      "suggestedBy": "Comunidade Paroquial",
+      "moment": "Comunhão",
+      "note": "Sugestão para o momento de reflexão e comunhão.",
+      "image": "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/ba/68/73/ba6873c5-950c-e6bf-24ff-d26b01053be4/7891430030622.jpg/300x300bb.jpg",
+      "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/37/ef/52/37ef5202-e2d6-ee71-1582-8bc0ef270e51/mzaf_18210332840582847291.plus.aac.p.m4a",
+      "externalUrl": "",
+      "status": "approved",
+      "adminFeedback": "Linda canção, aprovada pela coordenação.",
+      "createdAt": "2026-10-31T02:35:17.260Z"
+    }
   ]
 }

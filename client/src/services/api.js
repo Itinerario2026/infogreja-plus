@@ -26,5 +26,12 @@ export const api = {
   updateChurch: (id, payload) => request(`/admin/churches/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   updatePastoral: (id, payload) => request(`/admin/pastorals/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteContent: (type, id) => request(`/admin/content/${type}/${id}`, { method: "DELETE" }),
-  resetContent: () => request("/admin/reset-content", { method: "POST" })
+  resetContent: () => request("/admin/reset-content", { method: "POST" }),
+
+  // Músicas & Repertório
+  searchMusic: query => request(`/public/music-search?q=${encodeURIComponent(query)}`),
+  suggestMusic: payload => request("/public/music-suggestions", { method: "POST", body: JSON.stringify(payload) }),
+  updateMusicSuggestion: (id, payload) => request(`/admin/music-suggestions/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  addAdminMusic: payload => request("/admin/music-suggestions", { method: "POST", body: JSON.stringify(payload) }),
+  deleteMusicSuggestion: id => request(`/admin/music-suggestions/${id}`, { method: "DELETE" })
 };

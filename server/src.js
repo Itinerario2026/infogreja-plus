@@ -200,6 +200,64 @@ app.post("/api/public/contacts", async (req, res, next) => {
   }
 });
 
+// Pesquisa de músicas via iTunes Music API (sem necessidade de chaves, pública e rápida)
+app.get("/api/public/music-search", async (req, res) => {
+  try {
+    const term = String(req.query.q || "").trim();
+    if (!term) return res.json({ results: [] });
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=10&country=BR`;
+    const response = await fetch(url, { headers: { "User-Agent": "MinhaParoquia/1.0" } });
+    if (!response.ok) return res.json({ results: [] });
+    const data = await response.json();
+    const results = (data.results || []).map(r => ({
+      id: String(r.trackId),
+      title: r.trackName,
+      artist: r.artistName,
+      album: r.collectionName,
+      image: r.artworkUrl100?.replace("100x100bb", "400x400bb") || r.artworkUrl100 || "",
+      audioUrl: r.previewUrl || "",
+      externalUrl: r.trackViewUrl || ""
+    }));
+    res.json({ results });
+  } catch (err) {
+    console.warn("Aviso ao buscar músicas:", err.message);
+    res.json({ results: [] });
+  }
+});
+
+app.post("/api/public/music-suggestions", async (req, res, next) => {
+  try {
+    const { churchId, pastoralId = "", title, artist = "", suggestedBy = "", moment = "", note = "", image = "", audioUrl = "", externalUrl = "" } = req.body;
+    if (!churchId || !title?.trim()) {
+      return res.status(400).json({ message: "Preencha a paróquia e o título da música." });
+    }
+    const publicData = await db.getPublicData();
+    if (!publicData.churches.some(c => c.id === churchId)) {
+      return res.status(400).json({ message: "Paróquia inválida." });
+    }
+    const suggestion = {
+      id: id("mus"),
+      churchId,
+      pastoralId,
+      title: title.trim(),
+      artist: artist.trim(),
+      suggestedBy: (suggestedBy || "Membro da Comunidade").trim(),
+      moment: moment.trim(),
+      note: note.trim(),
+      image: image.trim(),
+      audioUrl: audioUrl.trim(),
+      externalUrl: externalUrl.trim(),
+      status: "pending",
+      adminFeedback: "",
+      createdAt: new Date().toISOString()
+    };
+    await db.addMusicSuggestion(suggestion);
+    res.status(201).json({ message: "Sugestão de música enviada com sucesso! A coordenação da pastoral irá revisar.", suggestion });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post("/api/auth/login", loginLimiter, async (req, res, next) => {
   try {
     const email = String(req.body.email || "").trim().toLowerCase();
@@ -347,6 +405,60 @@ app.put("/api/admin/pastorals/:id", requireAdmin, async (req, res, next) => {
     const updated = await db.updatePastoral(req.params.id, payload);
     if (!updated) return res.status(404).json({ message: "Pastoral não encontrada." });
     res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put("/api/admin/music-suggestions/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const allowed = ["status", "adminFeedback", "moment", "title", "artist", "note", "image", "audioUrl", "externalUrl"];
+    const payload = {};
+    for (const key of allowed) {
+      if (typeof req.body[key] === "string") payload[key] = req.body[key].trim();
+    }
+    const updated = await db.updateMusicSuggestion(req.params.id, payload);
+    if (!updated) return res.status(404).json({ message: "Sugestão não encontrada." });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/api/admin/music-suggestions", requireAdmin, async (req, res, next) => {
+  try {
+    const { churchId, pastoralId = "", title, artist = "", moment = "", note = "", image = "", audioUrl = "", externalUrl = "", status = "approved", adminFeedback = "" } = req.body;
+    if (!churchId || !title?.trim()) {
+      return res.status(400).json({ message: "Preencha a paróquia e o título da música." });
+    }
+    const suggestion = {
+      id: id("mus"),
+      churchId,
+      pastoralId,
+      title: title.trim(),
+      artist: artist.trim(),
+      suggestedBy: "Coordenação de Música",
+      moment: moment.trim(),
+      note: note.trim(),
+      image: image.trim(),
+      audioUrl: audioUrl.trim(),
+      externalUrl: externalUrl.trim(),
+      status: status || "approved",
+      adminFeedback: adminFeedback.trim(),
+      createdAt: new Date().toISOString()
+    };
+    await db.addMusicSuggestion(suggestion);
+    res.status(201).json(suggestion);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete("/api/admin/music-suggestions/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const success = await db.deleteMusicSuggestion(req.params.id);
+    if (!success) return res.status(404).json({ message: "Sugestão não encontrada." });
+    res.json({ message: "Sugestão de música excluída." });
   } catch (err) {
     next(err);
   }

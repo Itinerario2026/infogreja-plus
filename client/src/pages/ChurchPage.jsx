@@ -126,6 +126,7 @@ export default function ChurchPage() {
                       <div>
                         <h3>{p.title}</h3>
                         <p>{p.description}</p>
+                        {p.slug === "musicos" && <span className="music-feature-badge">🎵 Sugira músicas para as missas</span>}
                         <span className="pastoral-link">Acessar pastoral →</span>
                       </div>
                     </Link>

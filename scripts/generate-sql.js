@@ -172,7 +172,26 @@ CREATE TABLE IF NOT EXISTS public.contacts (
   "created_at" TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 11. Usuários Administradores (Admins)
+-- 11. Sugestões de Músicas & Repertório (Music Suggestions)
+CREATE TABLE IF NOT EXISTS public.music_suggestions (
+  "id" TEXT PRIMARY KEY,
+  "churchId" TEXT NOT NULL REFERENCES public.churches("id") ON DELETE CASCADE,
+  "pastoralId" TEXT,
+  "title" TEXT NOT NULL,
+  "artist" TEXT,
+  "suggestedBy" TEXT,
+  "moment" TEXT,
+  "note" TEXT,
+  "image" TEXT,
+  "audioUrl" TEXT,
+  "externalUrl" TEXT,
+  "status" TEXT DEFAULT 'pending',
+  "adminFeedback" TEXT,
+  "createdAt" TEXT,
+  "created_at" TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. Usuários Administradores (Admins)
 CREATE TABLE IF NOT EXISTS public.admins (
   "id" SERIAL PRIMARY KEY,
   "email" TEXT UNIQUE NOT NULL,
@@ -199,6 +218,7 @@ ALTER TABLE public.schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.registrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.music_suggestions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de Acesso Público (Leitura para todos nos dados da comunidade)
@@ -226,12 +246,18 @@ CREATE POLICY "Public Read Schedules" ON public.schedules FOR SELECT USING (true
 DROP POLICY IF EXISTS "Public Read Programs" ON public.programs;
 CREATE POLICY "Public Read Programs" ON public.programs FOR SELECT USING (true);
 
--- Permissão pública para envio de inscrições e contatos
+-- Permissão pública para envio de inscrições, contatos e sugestões de música
 DROP POLICY IF EXISTS "Public Insert Registrations" ON public.registrations;
 CREATE POLICY "Public Insert Registrations" ON public.registrations FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Public Insert Contacts" ON public.contacts;
 CREATE POLICY "Public Insert Contacts" ON public.contacts FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read Music" ON public.music_suggestions;
+CREATE POLICY "Public Read Music" ON public.music_suggestions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Insert Music" ON public.music_suggestions;
+CREATE POLICY "Public Insert Music" ON public.music_suggestions FOR INSERT WITH CHECK (true);
 
 -- Políticas para Service Role / Admin (acesso completo)
 DROP POLICY IF EXISTS "Service Role All Churches" ON public.churches;
@@ -263,6 +289,9 @@ CREATE POLICY "Service Role All Registrations" ON public.registrations FOR ALL U
 
 DROP POLICY IF EXISTS "Service Role All Contacts" ON public.contacts;
 CREATE POLICY "Service Role All Contacts" ON public.contacts FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service Role All Music" ON public.music_suggestions;
+CREATE POLICY "Service Role All Music" ON public.music_suggestions FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Service Role All Admins" ON public.admins;
 CREATE POLICY "Service Role All Admins" ON public.admins FOR ALL USING (true) WITH CHECK (true);

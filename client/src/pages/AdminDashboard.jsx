@@ -95,6 +95,26 @@ export default function AdminDashboard() {
   const [pastoralId, setPastoralId] = useState("");
   const [pastoralForm, setPastoralForm] = useState(emptyPastoralForm);
 
+  // Músicas & Sugestões
+  const [musicChurchFilter, setMusicChurchFilter] = useState("all");
+  const [musicStatusFilter, setMusicStatusFilter] = useState("all");
+  const [feedbackMap, setFeedbackMap] = useState({});
+  const [adminPlayingAudioId, setAdminPlayingAudioId] = useState(null);
+  const [adminMusicSearchQuery, setAdminMusicSearchQuery] = useState("");
+  const [adminMusicSearchResults, setAdminMusicSearchResults] = useState([]);
+  const [adminMusicSearching, setAdminMusicSearching] = useState(false);
+  const [adminMusicForm, setAdminMusicForm] = useState({
+    churchId: "",
+    title: "",
+    artist: "",
+    moment: "Entrada / Acolhida",
+    note: "",
+    image: "",
+    audioUrl: "",
+    externalUrl: "",
+    adminFeedback: ""
+  });
+
   async function load() {
     try {
       setFatalError("");
@@ -112,12 +132,14 @@ export default function AdminDashboard() {
         schedules: Array.isArray(d.schedules) ? d.schedules : [],
         programs: Array.isArray(d.programs) ? d.programs : [],
         registrations: Array.isArray(d.registrations) ? d.registrations : [],
-        contacts: Array.isArray(d.contacts) ? d.contacts : []
+        contacts: Array.isArray(d.contacts) ? d.contacts : [],
+        music_suggestions: Array.isArray(d.music_suggestions) ? d.music_suggestions : []
       };
       setData(safeData);
 
       const firstChurch = safeData.churches[0]?.id || "";
       setForm(current => ({ ...current, churchId: current.churchId || firstChurch }));
+      setAdminMusicForm(current => ({ ...current, churchId: current.churchId || firstChurch }));
 
       setChurchEditId(current => {
         const desired = current || firstChurch;
@@ -316,6 +338,142 @@ export default function AdminDashboard() {
     setPastoralForm(selected ? toPastoralForm(selected) : emptyPastoralForm);
   }
 
+  function toggleAdminAudio(id) {
+    setAdminPlayingAudioId(current => current === id ? null : id);
+  }
+
+  async function handleApproveMusic(item) {
+    const adminFeedback = feedbackMap[item.id] !== undefined ? feedbackMap[item.id] : (item.adminFeedback || "");
+    try {
+      await api.updateMusicSuggestion(item.id, { status: "approved", adminFeedback });
+      setFeedback(`Música "${item.title}" aprovada para o repertório público com sucesso!`);
+      await load();
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  }
+
+  async function handleRejectMusic(item) {
+    const adminFeedback = feedbackMap[item.id] !== undefined ? feedbackMap[item.id] : (item.adminFeedback || "");
+    try {
+      await api.updateMusicSuggestion(item.id, { status: "rejected", adminFeedback });
+      setFeedback(`Música "${item.title}" marcada como recusada.`);
+      await load();
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  }
+
+  async function handleDeleteMusic(id) {
+    if (!window.confirm("Deseja realmente excluir esta sugestão de música?")) return;
+    try {
+      await api.deleteMusicSuggestion(id);
+      setFeedback("Sugestão de música excluída com sucesso.");
+      await load();
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  }
+
+  async function handleAdminMusicSearch(e) {
+    if (e) e.preventDefault();
+    if (!adminMusicSearchQuery.trim()) return;
+    setAdminMusicSearching(true);
+    try {
+      const res = await api.searchMusic(adminMusicSearchQuery.trim());
+      setAdminMusicSearchResults(res.results || []);
+    } catch (err) {
+      setFeedback("Erro ao buscar músicas online: " + err.message);
+    } finally {
+      setAdminMusicSearching(false);
+    }
+  }
+
+  function selectAdminTrack(track) {
+    setAdminMusicForm(prev => ({
+      ...prev,
+      title: track.title,
+      artist: track.artist,
+      image: track.image || prev.image,
+      audioUrl: track.audioUrl || "",
+      externalUrl: track.externalUrl || ""
+    }));
+  }
+
+  function handleAdminPhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setFeedback("Por favor, selecione um arquivo de imagem válido (JPG, PNG ou WebP).");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 600;
+        const maxH = 600;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxW || height > maxH) {
+          if (width / height > maxW / maxH) {
+            height = Math.round((height * maxW) / width);
+            width = maxW;
+          } else {
+            width = Math.round((width * maxH) / height);
+            height = maxH;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const optimizedUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setAdminMusicForm(prev => ({ ...prev, image: optimizedUrl }));
+        setFeedback("Foto da música / partitura carregada com sucesso.");
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveAdminMusic(e) {
+    e.preventDefault();
+    if (!adminMusicForm.churchId || !adminMusicForm.title?.trim()) {
+      setFeedback("Selecione a paróquia e informe o título da música.");
+      return;
+    }
+    try {
+      await api.addAdminMusic(adminMusicForm);
+      setFeedback(`Música "${adminMusicForm.title}" adicionada diretamente ao repertório com sucesso!`);
+      setAdminMusicForm(prev => ({
+        churchId: prev.churchId,
+        title: "",
+        artist: "",
+        moment: "Entrada / Acolhida",
+        note: "",
+        image: "",
+        audioUrl: "",
+        externalUrl: "",
+        adminFeedback: ""
+      }));
+      setAdminMusicSearchResults([]);
+      setAdminMusicSearchQuery("");
+      await load();
+    } catch (err) {
+      setFeedback(err.message);
+    }
+  }
+
+  const musicSuggestions = data?.music_suggestions || [];
+  const pendingMusicCount = musicSuggestions.filter(m => m.status === "pending").length;
+  const filteredMusicSuggestions = musicSuggestions.filter(m => {
+    if (musicChurchFilter !== "all" && m.churchId !== musicChurchFilter) return false;
+    if (musicStatusFilter !== "all" && m.status !== musicStatusFilter) return false;
+    return true;
+  });
+
   async function logout() {
     await api.logout().catch(() => {});
     window.location.href = "/admin";
@@ -348,6 +506,10 @@ export default function AdminDashboard() {
           <a href="#cadastro">➕ Novo conteúdo</a>
           <a href="#dados-paroquia">✎ Dados da paróquia</a>
           <a href="#pastorais-admin">🤝 Pastorais</a>
+          <a href="#musicas-admin">
+            🎵 Músicas & Repertório
+            {pendingMusicCount > 0 && <span className="admin-nav-badge">{pendingMusicCount}</span>}
+          </a>
           <a href="#conteudos">🗂 Conteúdos</a>
           <a href="#inscricoes">📝 Inscrições</a>
           <a href="#mensagens">✉️ Mensagens</a>
@@ -374,6 +536,7 @@ export default function AdminDashboard() {
             <Metric label="Paróquias" value={data.churches.length}/>
             <Metric label="Pastorais" value={data.pastorals.length}/>
             <Metric label="Conteúdos" value={content.length}/>
+            <Metric label="Músicas" value={`${musicSuggestions.length} (${pendingMusicCount} pend.)`}/>
             <Metric label="Inscrições" value={data.registrations.length}/>
             <Metric label="Mensagens" value={data.contacts.length}/>
           </div>
@@ -408,6 +571,7 @@ export default function AdminDashboard() {
                     <button className="parish-action primary" onClick={() => chooseChurchForContent(church.id)}>+ Conteúdo</button>
                     <button className="parish-action" onClick={() => chooseChurchForEdit(church.id)}>Editar dados e foto</button>
                     <button className="parish-action" onClick={() => chooseChurchPastorals(church.id)}>Pastorais</button>
+                    <button className="parish-action" onClick={() => { setMusicChurchFilter(church.id); setAdminMusicForm(prev => ({ ...prev, churchId: church.id })); scrollTo("musicas-admin"); }}>🎵 Músicas</button>
                     <a className="parish-action" href={`/igrejas/${church.id}`} target="_blank" rel="noreferrer">Ver página ↗</a>
                   </div>
                 </div>
@@ -555,6 +719,358 @@ export default function AdminDashboard() {
               <label>Local<input value={pastoralForm.location} onChange={e=>setPastoralForm({...pastoralForm,location:e.target.value})}/></label>
               <button className="btn btn-primary">Salvar dados da pastoral</button>
             </form>
+          </div>
+        </section>
+
+        <section className="admin-section" id="musicas-admin">
+          <div className="panel music-admin-panel">
+            <div className="panel-heading">
+              <span className="eyebrow">Pastoral de Música</span>
+              <h2>Gestão de Músicas & Repertório</h2>
+              <p>
+                Revise as sugestões enviadas pelos fiéis (Aprovar / Recusar) com feedback para a comunidade,
+                ou adicione músicas diretamente ao repertório de cada paróquia (com busca online ou fotos).
+              </p>
+            </div>
+
+            {/* Sub-painel 1: Formulário do Admin para Adicionar Música */}
+            <div className="music-admin-add-card">
+              <div className="music-admin-add-header">
+                <h3>➕ Adicionar Música ao Repertório Oficial</h3>
+                <p>Cadastre uma canção recomendada pela equipe de liturgia e música para as celebrações.</p>
+              </div>
+
+              {/* Busca integrada online (iTunes) */}
+              <div className="music-admin-search-box">
+                <span className="music-search-label">🔍 Pesquisa Online Rápida (com capa e prévia de áudio automática):</span>
+                <form className="music-admin-search-form" onSubmit={handleAdminMusicSearch}>
+                  <input
+                    type="text"
+                    placeholder="Ex: Segura na Mão de Deus, Padre Zezinho, Canto das Criaturas..."
+                    value={adminMusicSearchQuery}
+                    onChange={e => setAdminMusicSearchQuery(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-secondary" disabled={adminMusicSearching}>
+                    {adminMusicSearching ? "Buscando..." : "Buscar música"}
+                  </button>
+                </form>
+
+                {adminMusicSearchResults.length > 0 && (
+                  <div className="music-admin-search-results">
+                    <span className="results-tip">Músicas encontradas (clique em uma para preencher o formulário):</span>
+                    <div className="music-admin-results-scroll">
+                      {adminMusicSearchResults.map(track => (
+                        <div className="music-track-item admin-track-item" key={track.id}>
+                          {track.image && <img src={track.image} alt={track.title} className="track-cover-mini" />}
+                          <div className="track-info">
+                            <strong>{track.title}</strong>
+                            <span>{track.artist}</span>
+                            {track.audioUrl && (
+                              <button
+                                type="button"
+                                className="track-play-btn"
+                                onClick={() => toggleAdminAudio(`search-${track.id}`)}
+                              >
+                                {adminPlayingAudioId === `search-${track.id}` ? "⏸ Pausar" : "▶ Ouvir 30s"}
+                              </button>
+                            )}
+                            {adminPlayingAudioId === `search-${track.id}` && (
+                              <audio src={track.audioUrl} autoPlay onEnded={() => setAdminPlayingAudioId(null)} />
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn btn-primary select-track-btn"
+                            onClick={() => selectAdminTrack(track)}
+                          >
+                            Preencher dados ✓
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Formulário Admin */}
+              <form className="admin-form music-admin-form" onSubmit={saveAdminMusic}>
+                <div className="admin-form-grid-2">
+                  <label>
+                    Paróquia Destino
+                    <select
+                      value={adminMusicForm.churchId}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, churchId: e.target.value })}
+                      required
+                    >
+                      {data.churches.map(c => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Momento da Missa / Celebração
+                    <select
+                      value={adminMusicForm.moment}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, moment: e.target.value })}
+                    >
+                      <option value="Entrada / Acolhida">Entrada / Acolhida</option>
+                      <option value="Ato Penitencial">Ato Penitencial</option>
+                      <option value="Glória">Glória</option>
+                      <option value="Salmo Responsorial">Salmo Responsorial</option>
+                      <option value="Aclamação ao Evangelho">Aclamação ao Evangelho</option>
+                      <option value="Ofertório">Ofertório</option>
+                      <option value="Santo">Santo</option>
+                      <option value="Comunhão">Comunhão</option>
+                      <option value="Ação de Graças / Pós-Comunhão">Ação de Graças / Pós-Comunhão</option>
+                      <option value="Envio / Final">Envio / Final</option>
+                      <option value="Adoração ao Santíssimo">Adoração ao Santíssimo</option>
+                      <option value="Outro momento">Outro momento</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div className="admin-form-grid-2">
+                  <label>
+                    Título da Música *
+                    <input
+                      required
+                      placeholder="Ex: Como És Lindo"
+                      value={adminMusicForm.title}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, title: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Artista / Compositor
+                    <input
+                      placeholder="Ex: Vida Reluz, Pe. Fábio de Melo, etc."
+                      value={adminMusicForm.artist}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, artist: e.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <div className="admin-form-grid-2">
+                  <label>
+                    Link do Áudio / Prévia (opcional)
+                    <input
+                      placeholder="https://... áudio preview .mp3 ou .m4a"
+                      value={adminMusicForm.audioUrl}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, audioUrl: e.target.value })}
+                    />
+                  </label>
+                  <label>
+                    Link Externo (Spotify / YouTube / Apple)
+                    <input
+                      placeholder="https://open.spotify.com/..."
+                      value={adminMusicForm.externalUrl}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, externalUrl: e.target.value })}
+                    />
+                  </label>
+                </div>
+
+                <div className="music-admin-photo-row">
+                  <div className="music-admin-photo-preview">
+                    {adminMusicForm.image ? (
+                      <img src={adminMusicForm.image} alt="Prévia" className="music-preview-thumb" />
+                    ) : (
+                      <span className="music-preview-placeholder">🎵</span>
+                    )}
+                  </div>
+                  <div className="music-admin-photo-actions">
+                    <label className="btn btn-secondary upload-image-btn">
+                      <span>📷 Anexar Foto / Capa / Partitura</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handleAdminPhotoUpload}
+                      />
+                    </label>
+                    {adminMusicForm.image && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger"
+                        onClick={() => setAdminMusicForm({ ...adminMusicForm, image: "" })}
+                      >
+                        Remover imagem
+                      </button>
+                    )}
+                    <input
+                      placeholder="Ou cole a URL da capa / foto aqui"
+                      value={adminMusicForm.image}
+                      onChange={e => setAdminMusicForm({ ...adminMusicForm, image: e.target.value })}
+                      style={{ marginTop: 4, width: "100%", fontSize: ".82rem" }}
+                    />
+                  </div>
+                </div>
+
+                <label className="wide-field">
+                  Observações / Dicas para a equipe de músicos
+                  <textarea
+                    rows="2"
+                    placeholder="Ex: Tocar no tom de Ré Maior, com introdução suave no violão..."
+                    value={adminMusicForm.note}
+                    onChange={e => setAdminMusicForm({ ...adminMusicForm, note: e.target.value })}
+                  />
+                </label>
+
+                <button type="submit" className="btn btn-primary">
+                  Adicionar ao Repertório Oficial ✓
+                </button>
+              </form>
+            </div>
+
+            {/* Sub-painel 2: Revisão das Sugestões */}
+            <div className="music-admin-review-section">
+              <div className="music-admin-filter-bar">
+                <div className="filter-title-group">
+                  <h3>Sugestões Recebidas ({filteredMusicSuggestions.length})</h3>
+                  <span className="filter-subtitle">Revise, aprove ou recuse sugestões enviadas pelos fiéis.</span>
+                </div>
+
+                <div className="music-filter-controls">
+                  <label>
+                    Filtrar por Paróquia:
+                    <select
+                      value={musicChurchFilter}
+                      onChange={e => setMusicChurchFilter(e.target.value)}
+                    >
+                      <option value="all">Todas as paróquias</option>
+                      {data.churches.map(c => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    Status:
+                    <select
+                      value={musicStatusFilter}
+                      onChange={e => setMusicStatusFilter(e.target.value)}
+                    >
+                      <option value="all">Todos ({musicSuggestions.length})</option>
+                      <option value="pending">Pendentes ({pendingMusicCount})</option>
+                      <option value="approved">Aprovadas ({musicSuggestions.filter(m => m.status === "approved").length})</option>
+                      <option value="rejected">Recusadas ({musicSuggestions.filter(m => m.status === "rejected").length})</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {filteredMusicSuggestions.length === 0 ? (
+                <div className="empty-music-admin">
+                  <span>🎵</span>
+                  <p>Nenhuma sugestão encontrada com os filtros selecionados.</p>
+                </div>
+              ) : (
+                <div className="music-admin-cards-grid">
+                  {filteredMusicSuggestions.map(item => (
+                    <article className={`music-admin-card status-${item.status}`} key={item.id}>
+                      <div className="music-admin-card-head">
+                        <div className="music-admin-card-thumb">
+                          {item.image ? (
+                            <img src={item.image} alt={item.title} />
+                          ) : (
+                            <div className="music-thumb-placeholder">🎵</div>
+                          )}
+                        </div>
+                        <div className="music-admin-card-meta">
+                          <div className="meta-badge-row">
+                            <span className="church-tag">{churchName(item.churchId)}</span>
+                            {item.moment && <span className="moment-tag">{item.moment}</span>}
+                            <span className={`status-badge status-${item.status}`}>
+                              {item.status === "approved" ? "✓ Aprovada" : item.status === "rejected" ? "✕ Recusada" : "⏳ Pendente"}
+                            </span>
+                          </div>
+                          <h4>{item.title}</h4>
+                          {item.artist && <span className="artist-name">{item.artist}</span>}
+                          <small className="suggester-info">
+                            Enviada por: <strong>{item.suggestedBy || "Fiel"}</strong> • {item.createdAt ? new Date(item.createdAt).toLocaleDateString("pt-BR") : "Recentemente"}
+                          </small>
+                        </div>
+                      </div>
+
+                      {item.note && (
+                        <div className="music-admin-note">
+                          <strong>Mensagem do fiel:</strong> "{item.note}"
+                        </div>
+                      )}
+
+                      {item.image && item.image.startsWith("data:image") && (
+                        <div className="music-attached-image">
+                          <small>Foto / Partitura anexada:</small>
+                          <a href={item.image} target="_blank" rel="noreferrer">
+                            <img src={item.image} alt="Partitura / Foto" className="sheet-preview" />
+                          </a>
+                        </div>
+                      )}
+
+                      {item.audioUrl && (
+                        <div className="music-admin-audio-player">
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-audio-admin"
+                            onClick={() => toggleAdminAudio(item.id)}
+                          >
+                            {adminPlayingAudioId === item.id ? "⏸ Pausar prévia" : "▶ Ouvir trecho (30s)"}
+                          </button>
+                          {adminPlayingAudioId === item.id && (
+                            <audio src={item.audioUrl} autoPlay controls onEnded={() => setAdminPlayingAudioId(null)} />
+                          )}
+                        </div>
+                      )}
+
+                      {item.externalUrl && (
+                        <div className="music-external-link">
+                          <a href={item.externalUrl} target="_blank" rel="noreferrer">
+                            Ouvir no streaming ↗
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Área de Revisão e Feedback do Administrador */}
+                      <div className="music-admin-actions-box">
+                        <label className="feedback-label">
+                          <span>Feedback / Resposta do Administrador:</span>
+                          <input
+                            type="text"
+                            placeholder="Ex: Excelente escolha para o ofertório! ou Não adequada ao tempo litúrgico."
+                            value={feedbackMap[item.id] !== undefined ? feedbackMap[item.id] : (item.adminFeedback || "")}
+                            onChange={e => setFeedbackMap(prev => ({ ...prev, [item.id]: e.target.value }))}
+                          />
+                        </label>
+
+                        <div className="music-admin-decision-buttons">
+                          <button
+                            type="button"
+                            className={`decision-btn btn-sim ${item.status === "approved" ? "is-selected" : ""}`}
+                            onClick={() => handleApproveMusic(item)}
+                          >
+                            ✓ Sim (Aprovar)
+                          </button>
+                          <button
+                            type="button"
+                            className={`decision-btn btn-nao ${item.status === "rejected" ? "is-selected" : ""}`}
+                            onClick={() => handleRejectMusic(item)}
+                          >
+                            ✕ Não (Recusar)
+                          </button>
+                          <button
+                            type="button"
+                            className="decision-btn btn-trash"
+                            onClick={() => handleDeleteMusic(item.id)}
+                            title="Excluir do sistema"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </section>
 

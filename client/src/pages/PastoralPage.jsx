@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import PublicHeader from "../components/PublicHeader";
 import PublicFooter from "../components/PublicFooter";
 import RegistrationModal from "../components/RegistrationModal";
+import MusicSuggestionModal from "../components/MusicSuggestionModal";
 import { api } from "../services/api";
 
 export default function PastoralPage() {
@@ -12,9 +13,15 @@ export default function PastoralPage() {
   const [registrationItem, setRegistrationItem] = useState("");
   const [contact, setContact] = useState({ name:"", email:"", message:"" });
   const [feedback, setFeedback] = useState("");
+  const [musicModalOpen, setMusicModalOpen] = useState(false);
+  const [playingTrackId, setPlayingTrackId] = useState(null);
+
+  const loadData = () => {
+    api.publicData().then(setData).catch(err => setError(err.message));
+  };
 
   useEffect(() => {
-    api.publicData().then(setData).catch(err => setError(err.message));
+    loadData();
   }, []);
 
   const church = useMemo(() => data?.churches.find(c => c.id === churchId), [data, churchId]);
@@ -34,6 +41,21 @@ export default function PastoralPage() {
   const groups = filter(data.groups);
   const schedules = filter(data.schedules);
   const programs = filter(data.programs);
+
+  const isMusicPastoral = pastoral.slug === "musicos" ||
+    pastoral.title?.toLowerCase().includes("músic") ||
+    pastoral.title?.toLowerCase().includes("music") ||
+    pastoral.title?.toLowerCase().includes("canto");
+
+  const churchApprovedMusic = useMemo(() => {
+    return (data?.music_suggestions || []).filter(
+      m => m.churchId === church.id && m.status === "approved"
+    );
+  }, [data, church.id]);
+
+  function toggleAudio(id) {
+    setPlayingTrackId(current => current === id ? null : id);
+  }
 
   async function sendContact(e) {
     e.preventDefault();
@@ -67,7 +89,18 @@ export default function PastoralPage() {
               <h1>{pastoral.title}</h1>
               <p>{pastoral.description}</p>
               <div className="pastoral-hero-actions">
-                <a href="#agenda" className="btn btn-light">Ver agenda</a>
+                {isMusicPastoral && (
+                  <button
+                    type="button"
+                    className="btn btn-music-suggest-hero"
+                    onClick={() => setMusicModalOpen(true)}
+                  >
+                    🎵 Sugerir Música para a Missa
+                  </button>
+                )}
+                <a href={isMusicPastoral ? "#repertorio-musical" : "#agenda"} className="btn btn-light">
+                  {isMusicPastoral ? "Ver repertório" : "Ver agenda"}
+                </a>
                 <a href="#contato-pastoral" className="btn btn-light-outline">Contato</a>
               </div>
             </div>
@@ -82,6 +115,7 @@ export default function PastoralPage() {
 
         <section className="pastoral-mini-nav">
           <div className="container">
+            {isMusicPastoral && <a href="#repertorio-musical" className="highlight-nav-music">🎵 Repertório & Sugestões</a>}
             <a href="#agenda">📅 Agenda</a>
             <a href="#eventos-pastoral">🎟 Eventos</a>
             <a href="#atividades-pastoral">🤝 Atividades</a>
@@ -90,6 +124,95 @@ export default function PastoralPage() {
             <a href="#contato-pastoral">💬 Contato</a>
           </div>
         </section>
+
+        {isMusicPastoral && (
+          <PastoralSection id="repertorio-musical" alt eyebrow="Música & Liturgia" title="Repertório das Celebrações & Sugestões">
+            <div className="music-hero-banner">
+              <div className="music-banner-copy">
+                <span className="eyebrow">Participe com sua sugestão</span>
+                <h3>Deseja sugerir uma música para tocar na missa?</h3>
+                <p>
+                  Envie sua canção para o ministério de música de {church.title}. A coordenação analisa cada sugestão
+                  para incluir nas celebrações litúrgicas e encontros da comunidade.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg-music"
+                onClick={() => setMusicModalOpen(true)}
+              >
+                🎵 Sugerir uma Música para Tocar
+              </button>
+            </div>
+
+            <div className="music-section-subtitle">
+              <h3>Músicas Selecionadas & Repertório da Comunidade ({churchApprovedMusic.length})</h3>
+              <p>Canções aprovadas pela coordenação para as celebrações e momentos de louvor.</p>
+            </div>
+
+            {churchApprovedMusic.length > 0 ? (
+              <div className="music-showcase-grid">
+                {churchApprovedMusic.map(m => (
+                  <article className="music-card-item" key={m.id}>
+                    <div className="music-card-cover-wrap">
+                      <img
+                        src={m.image || "/igreja1.svg"}
+                        alt={m.title}
+                        className="music-card-cover"
+                      />
+                      {m.audioUrl && (
+                        <button
+                          type="button"
+                          className="music-cover-play-btn"
+                          title="Tocar prévia da música"
+                          onClick={() => toggleAudio(m.id)}
+                        >
+                          {playingTrackId === m.id ? "⏸" : "▶"}
+                        </button>
+                      )}
+                    </div>
+                    <div className="music-card-details">
+                      {m.moment && <span className="music-moment-pill">{m.moment}</span>}
+                      <h4 className="music-title">{m.title}</h4>
+                      {m.artist && <span className="music-artist">{m.artist}</span>}
+                      {m.note && <p className="music-note">"{m.note}"</p>}
+                      <div className="music-card-footer">
+                        <small>Sugerido por: <strong>{m.suggestedBy || "Comunidade"}</strong></small>
+                        {m.audioUrl && (
+                          <button
+                            type="button"
+                            className="music-play-text-btn"
+                            onClick={() => toggleAudio(m.id)}
+                          >
+                            {playingTrackId === m.id ? "Pausar prévia" : "Ouvir trecho"}
+                          </button>
+                        )}
+                      </div>
+                      {playingTrackId === m.id && m.audioUrl && (
+                        <div className="music-inline-player">
+                          <audio src={m.audioUrl} autoPlay controls onEnded={() => setPlayingTrackId(null)} />
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-music-box">
+                <span className="empty-music-icon">🎵</span>
+                <h4>Nenhuma música no repertório ainda</h4>
+                <p>Seja o primeiro a sugerir uma canção bonita para ser tocada nas celebrações de {church.title}!</p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setMusicModalOpen(true)}
+                >
+                  + Enviar primeira sugestão
+                </button>
+              </div>
+            )}
+          </PastoralSection>
+        )}
 
         <PastoralSection id="agenda" eyebrow="Organização" title="Agenda e programação">
           <div className="pastoral-agenda-grid">
@@ -158,6 +281,16 @@ export default function PastoralPage() {
       <PublicFooter context={`${pastoral.title} • ${church.title}`} />
 
       <RegistrationModal churchId={church.id} pastoralId={pastoral.id} item={registrationItem} onClose={() => setRegistrationItem("")}/>
+
+      {musicModalOpen && (
+        <MusicSuggestionModal
+          churchId={church.id}
+          pastoralId={pastoral.id}
+          churchTitle={church.title}
+          onClose={() => setMusicModalOpen(false)}
+          onSuccess={loadData}
+        />
+      )}
     </>
   );
 }

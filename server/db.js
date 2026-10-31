@@ -37,7 +37,7 @@ const PUBLIC_TABLES = [
   "programs"
 ];
 
-const ALL_TABLES = [...PUBLIC_TABLES, "registrations", "contacts"];
+const ALL_TABLES = [...PUBLIC_TABLES, "registrations", "contacts", "music_suggestions"];
 
 const collectionByType = {
   church: "churches",
@@ -77,9 +77,10 @@ export const db = {
   async getPublicData() {
     if (supabase) {
       try {
-        const results = await Promise.all(
-          PUBLIC_TABLES.map(table => supabase.from(table).select("*"))
-        );
+        const results = await Promise.all([
+          ...PUBLIC_TABLES.map(table => supabase.from(table).select("*")),
+          supabase.from("music_suggestions").select("*").eq("status", "approved")
+        ]);
         const data = {};
         for (let i = 0; i < PUBLIC_TABLES.length; i++) {
           const table = PUBLIC_TABLES[i];
@@ -87,6 +88,8 @@ export const db = {
           if (res.error) throw res.error;
           data[table] = res.data || [];
         }
+        const musicRes = results[PUBLIC_TABLES.length];
+        data.music_suggestions = (!musicRes.error && musicRes.data) ? musicRes.data : [];
         return data;
       } catch (err) {
         console.warn("Aviso ao buscar dados no Supabase, usando fallback local:", err.message);
@@ -94,6 +97,7 @@ export const db = {
     }
     const local = readLocalDb();
     const { registrations, contacts, ...publicData } = local;
+    publicData.music_suggestions = (local.music_suggestions || []).filter(m => m.status === "approved");
     return publicData;
   },
 
@@ -148,6 +152,60 @@ export const db = {
     local.contacts.push(contact);
     writeLocalDb(local);
     return contact;
+  },
+
+  async addMusicSuggestion(suggestion) {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("music_suggestions").insert([suggestion]);
+        if (error) throw error;
+        return suggestion;
+      } catch (err) {
+        console.warn("Aviso ao salvar sugestão de música no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!Array.isArray(local.music_suggestions)) local.music_suggestions = [];
+    local.music_suggestions.push(suggestion);
+    writeLocalDb(local);
+    return suggestion;
+  },
+
+  async updateMusicSuggestion(id, payload) {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from("music_suggestions").update(payload).eq("id", id).select().single();
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.warn("Aviso ao atualizar sugestão de música no Supabase, gravando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!Array.isArray(local.music_suggestions)) local.music_suggestions = [];
+    const idx = local.music_suggestions.findIndex(m => m.id === id);
+    if (idx < 0) return null;
+    local.music_suggestions[idx] = { ...local.music_suggestions[idx], ...payload };
+    writeLocalDb(local);
+    return local.music_suggestions[idx];
+  },
+
+  async deleteMusicSuggestion(id) {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from("music_suggestions").delete().eq("id", id);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.warn("Aviso ao deletar sugestão de música no Supabase, deletando local:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!Array.isArray(local.music_suggestions)) return false;
+    const initial = local.music_suggestions.length;
+    local.music_suggestions = local.music_suggestions.filter(m => m.id !== id);
+    writeLocalDb(local);
+    return local.music_suggestions.length < initial;
   },
 
   async addContent(type, item) {

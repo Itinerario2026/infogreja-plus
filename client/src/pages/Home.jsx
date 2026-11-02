@@ -30,11 +30,11 @@ export default function Home() {
               <h1>Somos uma comunidade de fé que se reúne em torno do altar de Cristo para celebrar nossa vida e história.</h1>
               <p>Escolha sua comunidade e acesse, em uma página própria, pastorais, horários, eventos, avisos, atividades, grupos e contatos.</p>
               <div className="hero-cta-row">
-                <a href="#igrejas" className="btn btn-primary">Ver paróquias</a>
+                <a href="#igrejas" className="btn btn-primary">Ver comunidades</a>
               </div>
               <div className="hero-highlights">
-                <div><strong>12</strong><span>paróquias</span></div>
-                <div><strong>13</strong><span>pastorais por paróquia</span></div>
+                <div><strong>12</strong><span>comunidades</span></div>
+                <div><strong>13</strong><span>pastorais por comunidade</span></div>
                 <div><strong>1</strong><span>plataforma integrada</span></div>
               </div>
             </div>
@@ -48,7 +48,7 @@ export default function Home() {
               </div>
               <div className="hero-floating-card card-events">
                 <span>Informação organizada</span>
-                <strong>Cada paróquia possui sua própria área de conteúdo</strong>
+                <strong>Cada comunidade possui sua própria área de conteúdo</strong>
               </div>
               <div className="hero-floating-card card-contact">
                 <span>Minha Paróquia</span>
@@ -63,8 +63,8 @@ export default function Home() {
           <div className="container">
             <div className="home-churches-intro">
               <span className="eyebrow">Comunidades</span>
-              <h1>Nossas Paróquias</h1>
-              <p>Clique em uma paróquia para abrir sua página e consultar pastorais, missas, programação, eventos, atividades, avisos e contato.</p>
+              <h1>Nossas Comunidades</h1>
+              <p>Clique em uma comunidade para abrir sua página e consultar pastorais, horários, programação, eventos, atividades, avisos e contato.</p>
             </div>
 
             <div className="church-selector-grid church-link-grid">
@@ -74,7 +74,7 @@ export default function Home() {
                   <Link key={c.id} className="church-select-card church-link-card" to={`/igrejas/${c.id}`}>
                     <div className="church-box-image">
                       <img src={c.image?.replace("assets/img/", "/") || "/igreja1.svg"} alt={c.title}/>
-                      <span className="church-open-badge">Acessar paróquia →</span>
+                      <span className="church-open-badge">Acessar comunidade →</span>
                     </div>
                     <div className="church-box-body">
                       <h3>{c.title}</h3>
@@ -91,7 +91,7 @@ export default function Home() {
         </section>
       </main>
 
-      <PublicFooter context="12 paróquias, pastorais e comunidade em um só lugar." />
+      <PublicFooter context="12 comunidades, pastorais e fiéis em um só lugar." />
     </>
   );
 }

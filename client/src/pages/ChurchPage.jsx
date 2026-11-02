@@ -79,7 +79,7 @@ export default function ChurchPage() {
               <span className="church-page-image-label">Minha Paróquia</span>
             </div>
             <div className="church-page-heading">
-              <Link className="church-page-back" to="/">← Todas as paróquias</Link>
+              <Link className="church-page-back" to="/">← Todas as comunidades</Link>
               <span className="eyebrow">Comunidade</span>
               <h1>{church.title}</h1>
               <p>{church.description}</p>

@@ -21,7 +21,7 @@ export default function PublicHeader() {
         <button className="menu-btn" onClick={() => setOpen(!open)} aria-label="Abrir menu">☰</button>
         <nav className={`nav ${open ? "show" : ""}`}>
           <Link to="/" onClick={close}>Início</Link>
-          <a href="/#igrejas" onClick={close}>Paróquias</a>
+          <a href="/#igrejas" onClick={close}>Comunidades</a>
           <Link to="/creditos" onClick={close}>Créditos</Link>
           <Link to="/admin/login" onClick={close} className="nav-admin-link">
             Área Admin

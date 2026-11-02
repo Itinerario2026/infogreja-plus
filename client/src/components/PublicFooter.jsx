@@ -16,14 +16,14 @@ export default function PublicFooter({ context = "Minha Paróquia" }) {
         <div className="footer-nav-block">
           <span>Navegação</span>
           <Link to="/">Início</Link>
-          <a href="/#igrejas">Paróquias</a>
+          <a href="/#igrejas">Comunidades</a>
           <Link to="/creditos">Créditos do Projeto</Link>
           <Link to="/admin/login">Área do Administrador</Link>
         </div>
 
         <div className="footer-signature">
           <span>12 comunidades</span>
-          <span>13 pastorais por paróquia</span>
+          <span>13 pastorais por comunidade</span>
           <strong>Comunidades conectadas.</strong>
         </div>
       </div>

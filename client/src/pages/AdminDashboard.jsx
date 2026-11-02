@@ -411,7 +411,7 @@ export default function AdminDashboard() {
               className={`sidebar-nav-tab ${churchTab === "dados" ? "active" : ""}`}
               onClick={() => setChurchTab("dados")}
             >
-              Dados da Paróquia & Foto
+              Dados da Comunidade & Foto
             </button>
             <button
               className={`sidebar-nav-tab ${churchTab === "pastorais" ? "active" : ""}`}
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
                 className={`church-workspace-tab-btn ${churchTab === "dados" ? "active" : ""}`}
                 onClick={() => setChurchTab("dados")}
               >
-                Informações & Foto da Paróquia
+                Informações & Foto da Comunidade
               </button>
               <button
                 type="button"
@@ -533,7 +533,7 @@ export default function AdminDashboard() {
                 <div className="panel">
                   <div className="panel-heading">
                     <span className="eyebrow">Informações Públicas</span>
-                    <h2>Editar dados da paróquia</h2>
+                    <h2>Editar dados da comunidade</h2>
                     <p>Atualize nome, endereço, contatos, pároco e a foto de capa exibida no site.</p>
                   </div>
 
@@ -605,7 +605,7 @@ export default function AdminDashboard() {
                     </label>
 
                     <div className="wide-field church-image-manager">
-                      <span className="church-image-label">Foto de Capa da Paróquia</span>
+                      <span className="church-image-label">Foto de Capa da Comunidade</span>
                       <div className="church-image-preview-card">
                         <div className="church-image-preview-thumb">
                           <img
@@ -615,7 +615,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="church-image-controls">
                           <p className="church-image-help">
-                            Escolha uma nova foto do seu dispositivo para atualizar a imagem desta paróquia.
+                            Escolha uma nova foto do seu dispositivo para atualizar a imagem desta comunidade.
                           </p>
                           <div className="church-image-btn-row">
                             <label className="btn btn-secondary upload-image-btn">
@@ -649,7 +649,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <button className="btn btn-primary">Salvar dados da paróquia</button>
+                    <button className="btn btn-primary">Salvar dados da comunidade</button>
                   </form>
                 </div>
               </section>
@@ -970,7 +970,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="dashboard-cards minha-paroquia-metrics">
-                <Metric label="Paróquias" value={data.churches.length} />
+                <Metric label="Comunidades" value={data.churches.length} />
                 <Metric label="Pastorais" value={data.pastorals.length} />
                 <Metric label="Conteúdos" value={content.length} />
                 <Metric label="Sugestões Música" value={`${musicSuggestions.length} (${pendingMusicCount} pend.)`} />
@@ -983,7 +983,7 @@ export default function AdminDashboard() {
               <div className="admin-section-heading-pro">
                 <div>
                   <span className="eyebrow">Gestão por Comunidade</span>
-                  <h2>Selecione uma paróquia para gerenciar</h2>
+                  <h2>Selecione uma comunidade para gerenciar</h2>
                   <p>
                     Clique em qualquer uma das comunidades abaixo para abrir a área exclusiva de edição de dados,
                     pastorais, aprovação de músicas e conteúdos.

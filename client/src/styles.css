@@ -5957,3 +5957,190 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==============================================================
+   SIDEBAR MODERNA, LIMPA E DESPOLUÍDA (SEM EMOJIS)
+   ============================================================== */
+.church-workspace-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-back-action-clean {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #a39285;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.sidebar-back-action-clean:hover {
+  color: #ffffff;
+  transform: translateX(-3px);
+}
+
+.sidebar-community-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+}
+
+.sidebar-community-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #df9b64;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.sidebar-community-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.sidebar-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: #c4b5a8;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.sidebar-nav-item.active {
+  background: #8f3110;
+  color: #ffffff;
+  font-weight: 750;
+  box-shadow: 0 4px 12px rgba(143, 49, 16, 0.35);
+}
+
+.sidebar-item-badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 750;
+  padding: 2px 7px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.sidebar-nav-item.active .sidebar-item-badge {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-item-badge.badge-pending {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.sidebar-external-link-clean {
+  display: inline-flex;
+  align-items: center;
+  color: #a89484;
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.sidebar-external-link-clean:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ==============================================================
+   INPUTS INTERATIVOS: CALENDÁRIO E HORÁRIO NO MODAL
+   ============================================================== */
+.admin-interactive-picker {
+  padding: 10px 14px;
+  border: 1.5px solid #d4c2b2;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #2b1b10;
+  background: #ffffff;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  font-weight: 600;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-interactive-picker:focus {
+  outline: none;
+  border-color: #8f3110;
+  box-shadow: 0 0 0 3px rgba(143, 49, 16, 0.12);
+}
+
+.field-hint-clean {
+  display: block;
+  font-size: 0.76rem;
+  color: #8c786a;
+  margin-top: 3px;
+}
+
+.quick-time-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.chip-time-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #d9c8b8;
+  background: #fffdfb;
+  color: #5c4737;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-time-btn:hover, .chip-time-btn.active {
+  background: #8f3110;
+  border-color: #8f3110;
+  color: #ffffff;
+}

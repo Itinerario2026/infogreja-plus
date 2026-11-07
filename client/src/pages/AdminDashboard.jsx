@@ -107,6 +107,35 @@ export default function AdminDashboard() {
   const [scheduleMonthInput, setScheduleMonthInput] = useState("Novembro 2026");
   const [scheduleEditingId, setScheduleEditingId] = useState(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+
+  function handleDatePicked(dateStr) {
+    if (!dateStr) return;
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const d = new Date(year, month - 1, day);
+    const dayNum = String(day).padStart(2, "0");
+    const weekDayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    const weekDay = weekDayNames[d.getDay()];
+    const weekIndex = Math.ceil(day / 7);
+    const gender = (weekDay === "Domingo" || weekDay === "Sábado") ? "º" : "ª";
+    const autoLabel = `${weekIndex}${gender} ${weekDay} – Dia ${dayNum}`;
+
+    setScheduleForm(prev => ({
+      ...prev,
+      rawDate: dateStr,
+      date: `${dayNum}/${String(month).padStart(2, "0")}/${year}`,
+      dayLabel: autoLabel
+    }));
+  }
+
+  function handleTimePicked(timeVal) {
+    if (!timeVal) return;
+    setScheduleForm(prev => ({
+      ...prev,
+      rawTime: timeVal,
+      time: `${timeVal} hs`
+    }));
+  }
+
   const [scheduleForm, setScheduleForm] = useState({
     dayLabel: "",
     title: "",
@@ -367,9 +396,11 @@ export default function AdminDashboard() {
   function handleNewSchedule() {
     setScheduleEditingId(null);
     setScheduleForm({
+      rawDate: "",
       dayLabel: "",
       title: "",
       date: "",
+      rawTime: "20:00",
       time: "20:00 hs",
       presider: "",
       presiderRole: "Presidente",
@@ -385,11 +416,28 @@ export default function AdminDashboard() {
   function handleStartEditSchedule(item) {
     setIsScheduleModalOpen(true);
     setScheduleEditingId(item.id);
+
+    // Parse rawDate if date is DD/MM/YYYY
+    let rawD = "";
+    if (item.date && item.date.includes("/")) {
+      const parts = item.date.split("/");
+      if (parts.length === 3) rawD = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+    }
+
+    // Parse rawTime from time
+    let rawT = "";
+    if (item.time) {
+      const match = item.time.match(/(\d{1,2}:\d{2})/);
+      if (match) rawT = match[1].padStart(5, "0");
+    }
+
     setScheduleForm({
+      rawDate: rawD,
       dayLabel: item.dayLabel || "",
       title: item.title || "",
       date: item.date || "",
-      time: item.time || "",
+      rawTime: rawT,
+      time: item.time || "20:00 hs",
       presider: item.presider || "",
       presiderRole: item.presiderRole || "Presidente",
       organizer: item.organizer || "",
@@ -398,8 +446,6 @@ export default function AdminDashboard() {
       altarServers: item.altarServers || "",
       notes: item.notes || ""
     });
-    const elem = document.getElementById("schedule-editor-box");
-    if (elem) elem.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleCancelEditSchedule() {
@@ -538,56 +584,70 @@ export default function AdminDashboard() {
         {/* Menu lateral dinâmico: Geral vs Comunidade Específica */}
         {selectedChurchId && currentChurch ? (
           <nav className="sidebar-nav church-workspace-nav">
-            <button className="sidebar-back-action" onClick={closeChurchWorkspace}>
-              ← Voltar ao painel geral
+            <button className="sidebar-back-action-clean" onClick={closeChurchWorkspace}>
+              ← Painel Geral
             </button>
-            <div className="sidebar-church-current">
-              <span className="church-edit-badge">Comunidade em edição:</span>
-              <strong>{currentChurch.title}</strong>
+
+            <div className="sidebar-community-card">
+              <span className="sidebar-community-label">Comunidade</span>
+              <strong className="sidebar-community-title">{currentChurch.title}</strong>
             </div>
 
-            <button
-              className={`sidebar-nav-tab ${churchTab === "dados" ? "active" : ""}`}
-              onClick={() => setChurchTab("dados")}
-            >
-              Dados da Comunidade & Foto
-            </button>
-            <button
-              className={`sidebar-nav-tab ${churchTab === "escala" ? "active" : ""}`}
-              onClick={() => setChurchTab("escala")}
-            >
-              📅 Escala Litúrgica ({currentChurchSchedules.length})
-            </button>
-            <button
-              className={`sidebar-nav-tab ${churchTab === "pastorais" ? "active" : ""}`}
-              onClick={() => setChurchTab("pastorais")}
-            >
-              Pastorais ({currentChurchPastorals.length})
-            </button>
-            <button
-              className={`sidebar-nav-tab ${churchTab === "musicas" ? "active" : ""}`}
-              onClick={() => setChurchTab("musicas")}
-            >
-              Aprovação de Músicas
-              {currentChurchPendingMusic > 0 && (
-                <span className="admin-nav-badge">{currentChurchPendingMusic}</span>
-              )}
-            </button>
-            <button
-              className={`sidebar-nav-tab ${churchTab === "conteudos" ? "active" : ""}`}
-              onClick={() => setChurchTab("conteudos")}
-            >
-              Escalas, Conteúdos & Agenda ({currentChurchContent.length})
-            </button>
-            <button
-              className={`sidebar-nav-tab ${churchTab === "mensagens" ? "active" : ""}`}
-              onClick={() => setChurchTab("mensagens")}
-            >
-              Mensagens da Comunidade ({currentChurchContacts.length})
-            </button>
+            <div className="sidebar-nav-group">
+              <button
+                className={`sidebar-nav-item ${churchTab === "dados" ? "active" : ""}`}
+                onClick={() => setChurchTab("dados")}
+              >
+                <span>Dados & Foto</span>
+              </button>
 
-            <a href={`/igrejas/${selectedChurchId}`} target="_blank" rel="noreferrer" className="sidebar-external-link">
-              Abrir página pública ↗
+              <button
+                className={`sidebar-nav-item ${churchTab === "escala" ? "active" : ""}`}
+                onClick={() => setChurchTab("escala")}
+              >
+                <span>Escala Litúrgica</span>
+                <span className="sidebar-item-badge">{currentChurchSchedules.length}</span>
+              </button>
+
+              <button
+                className={`sidebar-nav-item ${churchTab === "pastorais" ? "active" : ""}`}
+                onClick={() => setChurchTab("pastorais")}
+              >
+                <span>Pastorais</span>
+                <span className="sidebar-item-badge">{currentChurchPastorals.length}</span>
+              </button>
+
+              <button
+                className={`sidebar-nav-item ${churchTab === "musicas" ? "active" : ""}`}
+                onClick={() => setChurchTab("musicas")}
+              >
+                <span>Aprovação de Músicas</span>
+                {currentChurchPendingMusic > 0 && (
+                  <span className="sidebar-item-badge badge-pending">{currentChurchPendingMusic}</span>
+                )}
+              </button>
+
+              <button
+                className={`sidebar-nav-item ${churchTab === "conteudos" ? "active" : ""}`}
+                onClick={() => setChurchTab("conteudos")}
+              >
+                <span>Avisos & Eventos</span>
+                <span className="sidebar-item-badge">{currentChurchContent.length}</span>
+              </button>
+
+              <button
+                className={`sidebar-nav-item ${churchTab === "mensagens" ? "active" : ""}`}
+                onClick={() => setChurchTab("mensagens")}
+              >
+                <span>Mensagens</span>
+                {currentChurchContacts.length > 0 && (
+                  <span className="sidebar-item-badge">{currentChurchContacts.length}</span>
+                )}
+              </button>
+            </div>
+
+            <a href={`/igrejas/${selectedChurchId}`} target="_blank" rel="noreferrer" className="sidebar-external-link-clean">
+              Ver página pública ↗
             </a>
           </nav>
         ) : (
@@ -656,7 +716,7 @@ export default function AdminDashboard() {
                 className={`church-workspace-tab-btn ${churchTab === "escala" ? "active" : ""}`}
                 onClick={() => setChurchTab("escala")}
               >
-                📅 Escala Litúrgica ({currentChurchSchedules.length})
+                Escala Litúrgica ({currentChurchSchedules.length})
               </button>
               <button
                 type="button"
@@ -680,7 +740,7 @@ export default function AdminDashboard() {
                 className={`church-workspace-tab-btn ${churchTab === "conteudos" ? "active" : ""}`}
                 onClick={() => setChurchTab("conteudos")}
               >
-                Escalas, Conteúdos & Agenda ({currentChurchContent.length})
+                Avisos & Eventos ({currentChurchContent.length})
               </button>
               <button
                 type="button"
@@ -726,7 +786,7 @@ export default function AdminDashboard() {
                             className="month-save-btn"
                             onClick={handleSaveScheduleMonth}
                           >
-                            💾 Salvar Mês
+                            Salvar Mês
                           </button>
                         </div>
                       </div>
@@ -783,7 +843,7 @@ export default function AdminDashboard() {
                                 <h4 className="card-day-title">{item.dayLabel || item.date}</h4>
                                 <span style={{ fontSize: "0.82rem", color: "#666" }}>{item.title}</span>
                               </div>
-                              <span className="card-time-badge">🕒 {item.time}</span>
+                              <span className="card-time-badge">{item.time}</span>
                             </div>
 
                             <div className="card-interactive-details">
@@ -819,7 +879,7 @@ export default function AdminDashboard() {
                               )}
                               {item.notes && (
                                 <div className="card-red-note">
-                                  📌 {item.notes}
+                                  {item.notes}
                                 </div>
                               )}
                             </div>
@@ -830,14 +890,14 @@ export default function AdminDashboard() {
                                 className="btn-card-edit"
                                 onClick={() => handleStartEditSchedule(item)}
                               >
-                                ✏️ Editar
+                                Editar
                               </button>
                               <button
                                 type="button"
                                 className="btn-card-delete"
                                 onClick={() => handleDeleteSchedule(item.id)}
                               >
-                                🗑️ Excluir
+                                Excluir
                               </button>
                             </div>
                           </article>
@@ -864,7 +924,7 @@ export default function AdminDashboard() {
                                 <h4 className="card-day-title">{item.dayLabel || item.date}</h4>
                                 <span style={{ fontSize: "0.82rem", color: "#666" }}>{item.title}</span>
                               </div>
-                              <span className="card-time-badge">🕒 {item.time}</span>
+                              <span className="card-time-badge">{item.time}</span>
                             </div>
 
                             <div className="card-interactive-details">
@@ -900,7 +960,7 @@ export default function AdminDashboard() {
                               )}
                               {item.notes && (
                                 <div className="card-red-note">
-                                  📌 {item.notes}
+                                  {item.notes}
                                 </div>
                               )}
                             </div>
@@ -911,14 +971,14 @@ export default function AdminDashboard() {
                                 className="btn-card-edit"
                                 onClick={() => handleStartEditSchedule(item)}
                               >
-                                ✏️ Editar
+                                Editar
                               </button>
                               <button
                                 type="button"
                                 className="btn-card-delete"
                                 onClick={() => handleDeleteSchedule(item.id)}
                               >
-                                🗑️ Excluir
+                                Excluir
                               </button>
                             </div>
                           </article>
@@ -937,7 +997,7 @@ export default function AdminDashboard() {
                       <div className="admin-modal-container" onClick={e => e.stopPropagation()}>
                         <div className="admin-modal-head">
                           <div>
-                            <h3>{scheduleEditingId ? "✏️ Editar Celebração da Escala" : "➕ Adicionar Celebração à Escala"}</h3>
+                            <h3>{scheduleEditingId ? "Editar Celebração da Escala" : "Adicionar Celebração à Escala"}</h3>
                             <p>{currentChurch.title} — Mês de {scheduleMonthInput}</p>
                           </div>
                           <button type="button" className="admin-modal-close" onClick={handleCancelEditSchedule}>×</button>
@@ -945,29 +1005,70 @@ export default function AdminDashboard() {
 
                         <form onSubmit={handleSubmitSchedule}>
                           <div className="admin-modal-body">
-                            {/* Bloco 1: Data e Horário */}
+                            {/* Bloco 1: Data e Horário com Seletores Interativos */}
                             <div className="modal-section-box">
                               <span className="modal-section-title">1. Data, Dia e Horário</span>
                               <div className="escala-admin-form">
                                 <div className="form-grid-2">
-                                  <label>
-                                    Dia e Rótulo na Escala *
+                                  <div>
+                                    <label>Escolher data no calendário:</label>
+                                    <input
+                                      type="date"
+                                      className="admin-interactive-picker"
+                                      value={scheduleForm.rawDate || ""}
+                                      onChange={e => handleDatePicked(e.target.value)}
+                                    />
+                                    <small className="field-hint-clean">Clique para abrir o calendário</small>
+                                  </div>
+
+                                  <div>
+                                    <label>Rótulo na Folha Litúrgica *</label>
                                     <input
                                       required
                                       placeholder="Ex: 1ª Quarta – Dia 07 ou 1º Domingo – Dia 04"
                                       value={scheduleForm.dayLabel}
                                       onChange={e => setScheduleForm({ ...scheduleForm, dayLabel: e.target.value })}
                                     />
-                                  </label>
-                                  <label>
-                                    Horário da Celebração *
+                                    <small className="field-hint-clean">Como aparecerá impresso na folha</small>
+                                  </div>
+                                </div>
+
+                                <div className="form-grid-2" style={{ marginTop: "14px" }}>
+                                  <div>
+                                    <label>Escolher horário (menu):</label>
+                                    <input
+                                      type="time"
+                                      className="admin-interactive-picker"
+                                      value={scheduleForm.rawTime || ""}
+                                      onChange={e => handleTimePicked(e.target.value)}
+                                    />
+                                    <small className="field-hint-clean">Clique para abrir o seletor de horas</small>
+                                  </div>
+
+                                  <div>
+                                    <label>Texto do Horário *</label>
                                     <input
                                       required
-                                      placeholder="Ex: 20:00 hs ou 08:00 hs ou 18:00 hs"
+                                      placeholder="Ex: 20:00 hs ou 08:00 hs"
                                       value={scheduleForm.time}
                                       onChange={e => setScheduleForm({ ...scheduleForm, time: e.target.value })}
                                     />
-                                  </label>
+                                    <div className="quick-time-chips">
+                                      {["08:00 hs", "18:00 hs", "19:00 hs", "20:00 hs"].map(t => (
+                                        <button
+                                          key={t}
+                                          type="button"
+                                          className={`chip-time-btn ${scheduleForm.time === t ? "active" : ""}`}
+                                          onClick={() => {
+                                            const hourMin = t.replace(" hs", "");
+                                            setScheduleForm({ ...scheduleForm, time: t, rawTime: hourMin });
+                                          }}
+                                        >
+                                          {t}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1063,7 +1164,7 @@ export default function AdminDashboard() {
                               Cancelar
                             </button>
                             <button type="submit" className="btn btn-primary">
-                              {scheduleEditingId ? "💾 Salvar Alterações" : "➕ Adicionar à Escala"}
+                              {scheduleEditingId ? "Salvar Alterações" : "Adicionar à Escala"}
                             </button>
                           </div>
                         </form>
@@ -1530,7 +1631,7 @@ export default function AdminDashboard() {
                           <div className="admin-message-item-header">
                             <div>
                               <h4>{c.name}</h4>
-                              <span className="admin-msg-email">✉️ {c.email}</span>
+                              <span className="admin-msg-email">{c.email}</span>
                             </div>
                             <span className="admin-msg-date">
                               📅 {c.createdAt ? new Date(c.createdAt).toLocaleDateString("pt-BR") : "Recente"}
@@ -1614,7 +1715,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="admin-parish-body">
                       <h3>{church.title}</h3>
-                      <p>📍 {church.location || "Endereço a cadastrar"}</p>
+                      <p>{church.location || "Endereço a cadastrar"}</p>
                       <div className="admin-parish-stats">
                         <span><strong>{churchContentCount(church.id)}</strong> conteúdos</span>
                         <span><strong>{churchMusicSuggestions(church.id)}</strong> músicas</span>

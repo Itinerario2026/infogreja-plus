@@ -8,13 +8,8 @@ import { api } from "../services/api";
 const TABS = [
   ["visao-geral", "Visão geral", "⌂"],
   ["pastorais", "Pastorais", "⛪"],
-  ["horarios", "Horários", "◷"],
-  ["programacao", "Programação", "▦"],
+  ["escala", "Escala", "▦"],
   ["eventos", "Eventos", "★"],
-  ["atividades", "Atividades", "✓"],
-  ["grupos", "Grupos", "◎"],
-  ["avisos", "Avisos", "!"],
-  ["contato", "Contato", "✉"],
 ];
 
 const generalByChurch = (items, churchId) =>
@@ -29,7 +24,8 @@ export default function ChurchPage() {
   const [contact, setContact] = useState({ name:"", email:"", message:"" });
   const [feedback, setFeedback] = useState("");
 
-  const requestedTab = params.get("aba");
+  const rawTab = params.get("aba");
+  const requestedTab = (rawTab === "horarios" || rawTab === "programacao") ? "escala" : rawTab;
   const currentTab = TABS.some(([id]) => id === requestedTab) ? requestedTab : "visao-geral";
 
   useEffect(() => {
@@ -90,8 +86,8 @@ export default function ChurchPage() {
               </div>
               {schedules.length > 0 && (
                 <div className="church-page-next-mass">
-                  <span>Próximos horários</span>
-                  <strong>{schedules.slice(0,2).map(x => `${x.date} às ${x.time}`).join(" • ")}</strong>
+                  <span>Próximas celebrações na escala</span>
+                  <strong>{schedules.slice(0,2).map(x => `${x.dayLabel || x.date} às ${x.time}`).join(" • ")}</strong>
                 </div>
               )}
             </div>
@@ -115,7 +111,15 @@ export default function ChurchPage() {
 
         <section className="section church-tab-section">
           <div className="container">
-            {currentTab === "visao-geral" && <Overview church={church} schedules={schedules} pastorals={pastorals} events={events} notices={notices} changeTab={changeTab}/>}
+            {currentTab === "visao-geral" && (
+              <Overview
+                church={church}
+                schedules={schedules}
+                pastorals={pastorals}
+                events={events}
+                changeTab={changeTab}
+              />
+            )}
 
             {currentTab === "pastorais" && (
               <TabPanel eyebrow="Vida pastoral" title="Pastorais" intro={`Conheça as pastorais de ${church.title}. Cada pastoral possui uma página própria.`}>
@@ -126,7 +130,7 @@ export default function ChurchPage() {
                       <div>
                         <h3>{p.title}</h3>
                         <p>{p.description}</p>
-                        {p.slug === "musicos" && <span className="music-feature-badge">🎵 Sugira músicas para as missas</span>}
+                        {p.slug === "musicos" && <span className="music-feature-badge">🎵 Sugira músicas para as celebrações</span>}
                         <span className="pastoral-link">Acessar pastoral →</span>
                       </div>
                     </Link>
@@ -135,65 +139,126 @@ export default function ChurchPage() {
               </TabPanel>
             )}
 
-            {currentTab === "horarios" && (
-              <TabPanel eyebrow="Celebrações" title="Horários" intro="Missas, celebrações e encontros gerais desta igreja.">
-                <div className="schedule-grid">
-                  {schedules.length ? schedules.map(x => <article className="schedule-card" key={x.id}><span>{x.date}</span><strong>{x.title}</strong><b>{x.time}</b><small>{x.location}</small></article>) : <Empty text="Nenhum horário cadastrado."/>}
-                </div>
-              </TabPanel>
-            )}
+            {currentTab === "escala" && (
+              <TabPanel
+                eyebrow="Liturgia & Celebrações"
+                title="Escala de Celebrações"
+                intro={`Calendário litúrgico e escalas de celebrações de ${church.title}. Acompanhe os horários, dirigentes, ministros, equipes e coroinhas.`}
+              >
+                <div className="escala-page-wrapper">
+                  <div className="escala-top-banner">
+                    <div className="escala-banner-info">
+                      <span className="escala-badge-tag">Calendário Litúrgico</span>
+                      <h3>{church.title} — Calendário de Liturgia Mensal</h3>
+                      <p>Escala completa de dirigentes, equipes organizadoras, ministros, instrumentistas e coroinhas.</p>
+                    </div>
+                  </div>
 
-            {currentTab === "programacao" && (
-              <TabPanel eyebrow="Agenda" title="Programação" intro="Agenda geral e programação da comunidade.">
-                <div className="timeline">{programs.length ? programs.map(x => <article className="timeline-item" key={x.id}><div className="timeline-day">{x.date}</div><div><h3>{x.title}</h3><span>{x.time}</span><p>{x.description}</p></div></article>) : <Empty text="Nenhuma programação geral cadastrada."/>}</div>
+                  <div className="escala-cards-grid">
+                    {schedules.length > 0 ? (
+                      schedules.map(item => {
+                        const isFullScale = !!(item.presider || item.organizer || item.communionMinisters || item.musicians || item.altarServers);
+
+                        if (!isFullScale) {
+                          return (
+                            <article className="escala-card-simple" key={item.id}>
+                              <div className="escala-simple-badge">
+                                <span className="simple-day">{item.date || item.dayLabel || "Celebração"}</span>
+                                <strong className="simple-time">🕒 {item.time}</strong>
+                              </div>
+                              <div className="escala-simple-details">
+                                <h4>{item.title}</h4>
+                                <small>📍 {item.location || "Na comunidade"}</small>
+                              </div>
+                            </article>
+                          );
+                        }
+
+                        return (
+                          <article className="escala-card-pro" key={item.id}>
+                            <div className="escala-card-pro-head">
+                              <div className="escala-card-date-col">
+                                <span className="escala-day-tag">{item.dayLabel || item.date}</span>
+                                <h4 className="escala-item-title">{item.title}</h4>
+                              </div>
+                              <div className="escala-card-time-pill">
+                                🕒 {item.time}
+                              </div>
+                            </div>
+
+                            <div className="escala-role-table">
+                              {item.presider && (
+                                <div className="escala-role-item">
+                                  <span className="role-lbl">{item.presiderRole || "Dirigente"}:</span>
+                                  <strong className="role-val role-highlight">{item.presider}</strong>
+                                </div>
+                              )}
+                              {item.organizer && (
+                                <div className="escala-role-item">
+                                  <span className="role-lbl">Eq. Org.:</span>
+                                  <span className="role-val">{item.organizer}</span>
+                                </div>
+                              )}
+                              {item.communionMinisters && (
+                                <div className="escala-role-item">
+                                  <span className="role-lbl">Mt. Ext. S. Com.:</span>
+                                  <span className="role-val">{item.communionMinisters}</span>
+                                </div>
+                              )}
+                              {item.musicians && (
+                                <div className="escala-role-item">
+                                  <span className="role-lbl">Instrumentistas:</span>
+                                  <span className="role-val role-music-val">{item.musicians}</span>
+                                </div>
+                              )}
+                              {item.altarServers && (
+                                <div className="escala-role-item">
+                                  <span className="role-lbl">Coroinhas:</span>
+                                  <span className="role-val">{item.altarServers}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {item.notes && (
+                              <div className="escala-card-notes">
+                                <span className="notes-icon">📌</span>
+                                <span>{item.notes}</span>
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })
+                    ) : (
+                      <Empty text="Nenhuma escala cadastrada no momento."/>
+                    )}
+                  </div>
+
+                  {programs.length > 0 && (
+                    <div className="escala-programs-section">
+                      <div className="section-divider-title">
+                        <h4>Outros Encontros & Programação da Semana</h4>
+                      </div>
+                      <div className="timeline">
+                        {programs.map(x => (
+                          <article className="timeline-item" key={x.id}>
+                            <div className="timeline-day">{x.date}</div>
+                            <div>
+                              <h3>{x.title}</h3>
+                              <span>🕒 {x.time}</span>
+                              <p>{x.description}</p>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </TabPanel>
             )}
 
             {currentTab === "eventos" && (
               <TabPanel eyebrow="Participe" title="Eventos" intro="Eventos abertos à comunidade e oportunidades de participação.">
                 <div className="grid cards-3">{events.length ? events.map(x => <InfoCard key={x.id} item={x} tag="Evento" onClick={() => setRegistrationItem(x.title)}/>) : <Empty text="Nenhum evento geral cadastrado."/>}</div>
-              </TabPanel>
-            )}
-
-            {currentTab === "atividades" && (
-              <TabPanel eyebrow="Serviço" title="Atividades" intro="Atividades, serviços e iniciativas desta comunidade.">
-                <div className="grid cards-3">{activities.length ? activities.map(x => <InfoCard key={x.id} item={x} tag={x.category || "Atividade"} secondary onClick={() => setRegistrationItem(x.title)}/>) : <Empty text="Nenhuma atividade geral cadastrada."/>}</div>
-              </TabPanel>
-            )}
-
-            {currentTab === "grupos" && (
-              <TabPanel eyebrow="Caminhe junto" title="Grupos" intro="Grupos, equipes e espaços de convivência da comunidade.">
-                <div className="grid cards-3">{groups.length ? groups.map(x => <article className="group-card" key={x.id}><span className="group-icon">👥</span><h3>{x.title}</h3><p>{x.description}</p><small>{x.date} {x.time && `• ${x.time}`}</small>{x.whatsapp && <a className="text-link" target="_blank" rel="noreferrer" href={`https://wa.me/${x.whatsapp}`}>Falar com responsável →</a>}</article>) : <Empty text="Nenhum grupo geral cadastrado."/>}</div>
-              </TabPanel>
-            )}
-
-            {currentTab === "avisos" && (
-              <TabPanel eyebrow="Fique por dentro" title="Avisos" intro="Comunicados e informações importantes desta igreja.">
-                <div className="notice-grid">{notices.length ? notices.map(x => <article className="notice" key={x.id}><span>!</span><div><h3>{x.title}</h3><p>{x.description}</p></div></article>) : <Empty text="Nenhum aviso geral cadastrado."/>}</div>
-              </TabPanel>
-            )}
-
-            {currentTab === "contato" && (
-              <TabPanel eyebrow="Fale conosco" title="Contato" intro={`Entre em contato com ${church.title}.`}>
-                <div className="church-page-contact-grid">
-                  <div className="church-page-contact-info">
-                    <div><span>Endereço</span><strong>{church.location}</strong></div>
-                    {church.instagram && <div><span>Instagram</span><a href={`https://instagram.com/${church.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer">{church.instagram}</a></div>}
-                    {church.email && <div><span>E-mail</span><a href={`mailto:${church.email}`}>{church.email}</a></div>}
-                    {church.phone && church.phone !== "Telefone a cadastrar" && <div><span>Telefone</span><strong>{church.phone}</strong></div>}
-                    <div className="contact-actions">
-                      {church.whatsapp && <a className="btn whatsapp-btn" target="_blank" rel="noreferrer" href={`https://wa.me/${church.whatsapp}`}>WhatsApp</a>}
-                      {church.map && <a className="btn btn-secondary" target="_blank" rel="noreferrer" href={church.map}>Localização</a>}
-                    </div>
-                  </div>
-                  <form className="public-contact-form church-page-contact-form" onSubmit={sendContact}>
-                    <label>Nome<input required value={contact.name} onChange={e=>setContact({...contact,name:e.target.value})}/></label>
-                    <label>E-mail<input type="email" required value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})}/></label>
-                    <label>Mensagem<textarea rows="5" required value={contact.message} onChange={e=>setContact({...contact,message:e.target.value})}/></label>
-                    <button className="btn btn-primary">Enviar mensagem</button>
-                    {feedback && <small>{feedback}</small>}
-                  </form>
-                </div>
               </TabPanel>
             )}
           </div>
@@ -207,7 +272,7 @@ export default function ChurchPage() {
   );
 }
 
-function Overview({ church, schedules, pastorals, events, notices, changeTab }) {
+function Overview({ church, schedules, pastorals, events, changeTab }) {
   return (
     <div className="church-overview">
       <div className="church-overview-heading">
@@ -217,16 +282,20 @@ function Overview({ church, schedules, pastorals, events, notices, changeTab }) 
       </div>
       <div className="church-overview-metrics">
         <button onClick={() => changeTab("pastorais")}><strong>{pastorals.length}</strong><span>Pastorais</span></button>
-        <button onClick={() => changeTab("horarios")}><strong>{schedules.length}</strong><span>Horários</span></button>
+        <button onClick={() => changeTab("escala")}><strong>{schedules.length}</strong><span>Escala de Celebrações</span></button>
         <button onClick={() => changeTab("eventos")}><strong>{events.length}</strong><span>Eventos</span></button>
-        <button onClick={() => changeTab("avisos")}><strong>{notices.length}</strong><span>Avisos</span></button>
       </div>
       <div className="church-overview-grid">
         <article className="church-overview-block">
-          <span className="eyebrow">Horários</span>
-          <h3>Missas e celebrações</h3>
-          {schedules.length ? schedules.slice(0,3).map(x => <div className="overview-row" key={x.id}><span>{x.date}</span><strong>{x.time}</strong></div>) : <p>Nenhum horário cadastrado.</p>}
-          <button className="text-button" onClick={() => changeTab("horarios")}>Ver todos os horários →</button>
+          <span className="eyebrow">Liturgia & Celebrações</span>
+          <h3>Escala de Celebrações</h3>
+          {schedules.length ? schedules.slice(0,3).map(x => (
+            <div className="overview-row" key={x.id}>
+              <span>{x.dayLabel || x.date}</span>
+              <strong>🕒 {x.time} {x.presider ? `• ${x.presider}` : ""}</strong>
+            </div>
+          )) : <p>Nenhuma escala cadastrada.</p>}
+          <button className="text-button" onClick={() => changeTab("escala")}>Ver escala completa →</button>
         </article>
         <article className="church-overview-block">
           <span className="eyebrow">Vida pastoral</span>

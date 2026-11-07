@@ -6,7 +6,7 @@ const TYPES = {
   activity: "Atividade / Serviço",
   notice: "Aviso",
   group: "Grupo",
-  schedule: "Horário",
+  schedule: "Escala / Celebração",
   program: "Programação"
 };
 
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
               className={`sidebar-nav-tab ${churchTab === "conteudos" ? "active" : ""}`}
               onClick={() => setChurchTab("conteudos")}
             >
-              Conteúdos & Agenda ({currentChurchContent.length})
+              Escalas, Conteúdos & Agenda ({currentChurchContent.length})
             </button>
 
             <a href={`/igrejas/${selectedChurchId}`} target="_blank" rel="noreferrer" className="sidebar-external-link">
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                 className={`church-workspace-tab-btn ${churchTab === "conteudos" ? "active" : ""}`}
                 onClick={() => setChurchTab("conteudos")}
               >
-                Conteúdos & Agenda ({currentChurchContent.length})
+                Escalas, Conteúdos & Agenda ({currentChurchContent.length})
               </button>
             </div>
 
@@ -890,14 +890,14 @@ export default function AdminDashboard() {
               <section className="church-workspace-content-pane">
                 <div className="panel" style={{ marginBottom: 28 }}>
                   <div className="panel-heading">
-                    <span className="eyebrow">Novo Conteúdo</span>
-                    <h2>Cadastrar conteúdo para {currentChurch.title}</h2>
-                    <p>Adicione eventos, atividades, avisos ou horários para esta paróquia ou suas pastorais.</p>
+                    <span className="eyebrow">Novo Conteúdo ou Escala</span>
+                    <h2>Cadastrar escala ou conteúdo para {currentChurch.title}</h2>
+                    <p>Adicione escalas de celebrações, eventos, atividades ou avisos para esta comunidade ou suas pastorais.</p>
                   </div>
                   <form className="admin-form" onSubmit={submit}>
                     <label>Vínculo pastoral
                       <select value={form.pastoralId} onChange={e => setForm({ ...form, pastoralId: e.target.value })}>
-                        <option value="">Geral da paróquia</option>
+                        <option value="">Geral da comunidade</option>
                         {currentChurchPastorals.map(p => (
                           <option key={p.id} value={p.id}>{p.title}</option>
                         ))}
@@ -908,13 +908,28 @@ export default function AdminDashboard() {
                         {Object.entries(TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                       </select>
                     </label>
-                    <label>Título<input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></label>
-                    <label>Descrição<textarea rows="3" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></label>
-                    <label>Data / Dia<input value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></label>
-                    <label>Horário<input value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} /></label>
-                    <label>Local<input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></label>
-                    <label>Categoria<input placeholder="atividade, serviço, curso..." value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} /></label>
-                    <button className="btn btn-primary">Salvar conteúdo da paróquia</button>
+                    <label>Título<input required placeholder="Ex: 1º Domingo – Celebração da Eucaristia" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} /></label>
+                    <label>Data / Dia<input placeholder="Ex: 04/10/2026 ou 1º Domingo" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></label>
+                    <label>Horário<input placeholder="Ex: 08:00 hs ou 20h" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} /></label>
+                    <label>Local<input placeholder="Ex: Comunidade Santa Luzia" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></label>
+
+                    {form.type === "schedule" && (
+                      <>
+                        <label>Rótulo do dia na escala (ex: 1º Domingo – Dia 04)<input placeholder="1º Domingo – Dia 04" value={form.dayLabel || ""} onChange={e => setForm({ ...form, dayLabel: e.target.value })} /></label>
+                        <label>Dirigente / Presidente (ex: Pe. Igino, Helena)<input placeholder="Pe. Igino" value={form.presider || ""} onChange={e => setForm({ ...form, presider: e.target.value })} /></label>
+                        <label>Equipe Organizadora - Eq. Org. (ex: Legião de Maria, Dízimo)<input placeholder="Legião de Maria" value={form.organizer || ""} onChange={e => setForm({ ...form, organizer: e.target.value })} /></label>
+                        <label>Ministros - Mt. Ext. S. Com. (ex: Alrineide, Teresa / Sônia)<input placeholder="Alrineide" value={form.communionMinisters || ""} onChange={e => setForm({ ...form, communionMinisters: e.target.value })} /></label>
+                        <label>Instrumentistas / Música (ex: Renascer em Cristo)<input placeholder="Renascer em Cristo" value={form.musicians || ""} onChange={e => setForm({ ...form, musicians: e.target.value })} /></label>
+                        <label>Coroinhas / Acólitos (ex: Vitória, Kemelly e Paulo)<input placeholder="Vitória, Kemelly e Paulo" value={form.altarServers || ""} onChange={e => setForm({ ...form, altarServers: e.target.value })} /></label>
+                        <label className="wide-field">Observações / Tarefas (ex: Lavar Túnicas: Legião de Maria)<input placeholder="Lavar Túnicas: Legião de Maria • Toalhas: Helena" value={form.notes || ""} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>
+                      </>
+                    )}
+
+                    <label className="wide-field">Descrição / Detalhes<textarea rows="3" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></label>
+                    {form.type !== "schedule" && (
+                      <label>Categoria<input placeholder="atividade, serviço, curso..." value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} /></label>
+                    )}
+                    <button className="btn btn-primary">Salvar na comunidade</button>
                   </form>
                 </div>
 

@@ -6,10 +6,49 @@ import RegistrationModal from "../components/RegistrationModal";
 import { api } from "../services/api";
 
 const TABS = [
-  ["visao-geral", "Visão geral", "⌂"],
-  ["pastorais", "Pastorais", "⛪"],
-  ["escala", "Escala", "▦"],
-  ["eventos", "Eventos", "★"],
+  {
+    id: "visao-geral",
+    label: "Visão geral",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+    )
+  },
+  {
+    id: "pastorais",
+    label: "Pastorais",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+    )
+  },
+  {
+    id: "escala",
+    label: "Escala",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+    )
+  },
+  {
+    id: "eventos",
+    label: "Eventos",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    )
+  }
 ];
 
 const generalByChurch = (items, churchId) =>
@@ -26,7 +65,7 @@ export default function ChurchPage() {
 
   const rawTab = params.get("aba");
   const requestedTab = (rawTab === "horarios" || rawTab === "programacao") ? "escala" : rawTab;
-  const currentTab = TABS.some(([id]) => id === requestedTab) ? requestedTab : "visao-geral";
+  const currentTab = TABS.some(t => t.id === requestedTab) ? requestedTab : "visao-geral";
 
   useEffect(() => {
     api.publicData().then(setData).catch(err => setError(err.message));
@@ -95,17 +134,20 @@ export default function ChurchPage() {
         </section>
 
         <section className="church-tabs-wrap">
-          <div className="container church-tabs" role="tablist" aria-label="Informações da igreja">
-            {TABS.map(([id, label, icon]) => (
-              <button
-                key={id}
-                type="button"
-                className={`church-tab ${currentTab === id ? "active" : ""}`}
-                onClick={() => changeTab(id)}
-              >
-                <span>{icon}</span>{label}
-              </button>
-            ))}
+          <div className="container church-tabs-shell">
+            <nav className="church-tabs" role="tablist" aria-label="Navegação da comunidade">
+              {TABS.map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`church-tab ${currentTab === tab.id ? "active" : ""}`}
+                  onClick={() => changeTab(tab.id)}
+                >
+                  <span className="church-tab-icon">{tab.icon}</span>
+                  <span className="church-tab-text">{tab.label}</span>
+                </button>
+              ))}
+            </nav>
           </div>
         </section>
 

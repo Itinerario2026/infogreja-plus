@@ -2537,10 +2537,112 @@ body{background:linear-gradient(180deg,#faf7f2 0%,#f5f0e9 100%);color:var(--text
 .church-page-next-mass{background:#fff;border:1px solid #eddccf;box-shadow:0 10px 26px rgba(81,46,26,.06);}
 .church-page-next-mass span{color:#9a5528;}
 
-.church-tabs-wrap{background:#f8f4ee;}
-.church-tabs{background:rgba(255,255,255,.7);border:1px solid #eee2d6;border-radius:22px;padding:8px;box-shadow:0 12px 28px rgba(81,46,26,.05);}
-.church-tabs button{border-radius:16px;color:#765f50;}
-.church-tabs button.active{background:#8f3110;color:#fff;box-shadow:0 8px 18px rgba(143,49,16,.18);}
+/* ==========================================================================
+   NAVEGAÇÃO EM PÍLULA FLUTUANTE MODERNA (CHURCH TABS)
+   ========================================================================== */
+.church-tabs-wrap{
+  position:sticky;
+  top:76px;
+  z-index:38;
+  padding:16px 0;
+  background:linear-gradient(180deg, rgba(247,244,239,0.96) 0%, rgba(247,244,239,0.85) 100%);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(235,226,215,0.7);
+  box-shadow:0 4px 18px rgba(44,30,20,0.03);
+}
+
+.church-tabs-shell{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.church-tabs{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#ffffff;
+  border:1px solid #eddcd0;
+  border-radius:999px;
+  padding:6px;
+  box-shadow:0 8px 24px rgba(60,36,20,0.06), 0 1px 3px rgba(0,0,0,0.03);
+  max-width:fit-content;
+  margin:0 auto;
+}
+
+.church-tab{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 22px;
+  border-radius:999px;
+  border:none;
+  background:transparent;
+  color:#6b5a4d;
+  font-size:.88rem;
+  font-weight:700;
+  letter-spacing:.01em;
+  cursor:pointer;
+  transition:all .22s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space:nowrap;
+  user-select:none;
+}
+
+.church-tab-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#a38f80;
+  transition:all .2s ease;
+}
+
+.church-tab:hover{
+  background:rgba(143,49,16,0.07);
+  color:#8f3110;
+}
+.church-tab:hover .church-tab-icon{
+  color:#8f3110;
+  transform:scale(1.1);
+}
+
+.church-tab.active{
+  background:linear-gradient(135deg, #aa4c19 0%, #8f3110 100%) !important;
+  color:#ffffff !important;
+  box-shadow:0 4px 14px rgba(143,49,16,0.32) !important;
+}
+.church-tab.active .church-tab-icon{
+  color:#ffffff !important;
+}
+
+@media(max-width:768px){
+  .church-tabs-wrap{
+    top:64px;
+    padding:10px 0;
+  }
+  .church-tabs-shell{
+    justify-content:flex-start;
+  }
+  .church-tabs{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    scrollbar-width:none;
+    justify-content:flex-start;
+    border-radius:16px;
+    padding:5px;
+  }
+  .church-tabs::-webkit-scrollbar{
+    display:none;
+  }
+  .church-tab{
+    padding:9px 16px;
+    font-size:.82rem;
+    gap:6px;
+    flex-shrink:0;
+  }
+}
+
 .church-tab-panel,.church-overview-block,.group-card,.notice,.schedule-card,.empty-state,.panel,.metric-card,.card{background:#fffdfb;border:1px solid #eee1d4;box-shadow:0 10px 24px rgba(81,46,26,.05);}
 .schedule-card,.group-card,.notice,.card,.church-overview-block{border-radius:20px;}
 .card-tag,.table-tag{background:#fff2e5;color:#8f3110;}

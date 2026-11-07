@@ -186,6 +186,7 @@ export default function AdminDashboard() {
   const currentChurchContent = content.filter(x => x.churchId === selectedChurchId);
   const currentChurchMusic = (data.music_suggestions || []).filter(m => m.churchId === selectedChurchId);
   const currentChurchPendingMusic = currentChurchMusic.filter(m => m.status === "pending").length;
+  const currentChurchContacts = (data.contacts || []).filter(c => c.churchId === selectedChurchId);
 
   const filteredChurchMusic = currentChurchMusic.filter(m => {
     if (musicStatusFilter !== "all" && m.status !== musicStatusFilter) return false;
@@ -434,6 +435,12 @@ export default function AdminDashboard() {
             >
               Escalas, Conteúdos & Agenda ({currentChurchContent.length})
             </button>
+            <button
+              className={`sidebar-nav-tab ${churchTab === "mensagens" ? "active" : ""}`}
+              onClick={() => setChurchTab("mensagens")}
+            >
+              Mensagens da Comunidade ({currentChurchContacts.length})
+            </button>
 
             <a href={`/igrejas/${selectedChurchId}`} target="_blank" rel="noreferrer" className="sidebar-external-link">
               Abrir página pública ↗
@@ -524,6 +531,13 @@ export default function AdminDashboard() {
                 onClick={() => setChurchTab("conteudos")}
               >
                 Escalas, Conteúdos & Agenda ({currentChurchContent.length})
+              </button>
+              <button
+                type="button"
+                className={`church-workspace-tab-btn ${churchTab === "mensagens" ? "active" : ""}`}
+                onClick={() => setChurchTab("mensagens")}
+              >
+                Mensagens ({currentChurchContacts.length})
               </button>
             </div>
 
@@ -962,6 +976,54 @@ export default function AdminDashboard() {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </section>
+            )}
+
+            {/* Conteúdo da Aba 5: Mensagens recebidas desta Comunidade */}
+            {churchTab === "mensagens" && (
+              <section className="church-workspace-content-pane">
+                <div className="panel">
+                  <div className="panel-heading">
+                    <span className="eyebrow">Mensagens & Contatos</span>
+                    <h2>Mensagens recebidas por {currentChurch.title} ({currentChurchContacts.length})</h2>
+                    <p>Mensagens, dúvidas, intenções e pedidos enviados pelos fiéis diretamente para a administração desta comunidade.</p>
+                  </div>
+
+                  {currentChurchContacts.length > 0 ? (
+                    <div className="admin-messages-list">
+                      {currentChurchContacts.map(c => (
+                        <article key={c.id} className="admin-message-item-card">
+                          <div className="admin-message-item-header">
+                            <div>
+                              <h4>{c.name}</h4>
+                              <span className="admin-msg-email">✉️ {c.email}</span>
+                            </div>
+                            <span className="admin-msg-date">
+                              📅 {c.createdAt ? new Date(c.createdAt).toLocaleDateString("pt-BR") : "Recente"}
+                            </span>
+                          </div>
+                          <div className="admin-message-item-body">
+                            <p style={{ whiteSpace: "pre-wrap", margin: "14px 0", color: "#2b1b10", fontSize: "0.95rem", lineHeight: "1.6" }}>
+                              {c.message}
+                            </p>
+                          </div>
+                          <div className="admin-message-actions">
+                            <a
+                              href={`mailto:${c.email}?subject=Resposta da Comunidade ${encodeURIComponent(currentChurch.title)}`}
+                              className="btn btn-secondary btn-sm"
+                            >
+                              Responder por E-mail
+                            </a>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      Nenhuma mensagem recebida para {currentChurch.title} ainda.
+                    </div>
+                  )}
                 </div>
               </section>
             )}

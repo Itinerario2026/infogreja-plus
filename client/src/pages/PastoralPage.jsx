@@ -25,10 +25,18 @@ export default function PastoralPage() {
   }, []);
 
   const church = useMemo(() => data?.churches?.find(c => c.id === churchId), [data, churchId]);
-  const pastoral = useMemo(
-    () => data?.pastorals?.find(p => p.churchId === churchId && p.slug === pastoralSlug),
-    [data, churchId, pastoralSlug]
-  );
+  const pastoral = useMemo(() => {
+    if (!data?.pastorals) return null;
+    const found = data.pastorals.find(
+      p => p.churchId === churchId && (p.slug === pastoralSlug || (pastoralSlug === "pascom" && p.slug === "pascol"))
+    );
+    if (!found) return null;
+    return {
+      ...found,
+      title: (found.title === "Pascol" || found.slug === "pascol") ? "PASCOM" : found.title,
+      slug: (found.slug === "pascol") ? "pascom" : found.slug
+    };
+  }, [data, churchId, pastoralSlug]);
   const churchApprovedMusic = useMemo(() => {
     if (!data?.music_suggestions || !church?.id) return [];
     return data.music_suggestions.filter(

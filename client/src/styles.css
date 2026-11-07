@@ -5559,3 +5559,401 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==============================================================
+   ADMIN: ESCALA LITÚRGICA VISUAL E INTUITIVA
+   ============================================================== */
+.admin-escala-header-bar {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 14px;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 4px 14px rgba(44, 30, 20, 0.04);
+  margin-bottom: 24px;
+}
+
+.admin-escala-month-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.month-label-eyebrow {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #8f3110;
+  margin-bottom: 4px;
+}
+
+.month-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-input-styled {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #d9c8b8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fff;
+  width: 170px;
+}
+
+.month-save-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-save-btn:hover {
+  background: #991b1b;
+  transform: translateY(-1px);
+}
+
+.admin-escala-quick-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.escala-quick-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #e2d4c7;
+  background: #fffdfb;
+  color: #634f40;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.escala-quick-pill:hover, .escala-quick-pill.active {
+  background: #fdf2e9;
+  border-color: #b91c1c;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.admin-escala-actions-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-add-celebration {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #8f3110;
+  color: #ffffff;
+  font-weight: 750;
+  font-size: 0.92rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(143, 49, 16, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-add-celebration:hover {
+  background: #73260c;
+  transform: translateY(-1px);
+}
+
+/* QUADRO VISUAL DA ESCALA (2 COLUNAS) */
+.admin-escala-visual-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.admin-escala-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-escala-col-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ecdcd0;
+}
+
+.col-header-badge {
+  background: #8f3110;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.admin-escala-col-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #2b1b10;
+}
+
+.admin-escala-card-interactive {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(44, 30, 20, 0.04);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.admin-escala-card-interactive:hover {
+  box-shadow: 0 6px 18px rgba(44, 30, 20, 0.08);
+  border-color: #d6bead;
+}
+
+.card-interactive-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px dashed #f0e6dc;
+}
+
+.card-day-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin: 0 0 2px 0;
+}
+
+.card-time-badge {
+  background: #fdf5ef;
+  border: 1px solid #f2dfd0;
+  color: #8f3110;
+  font-size: 0.84rem;
+  font-weight: 750;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.card-interactive-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #2d241d;
+}
+
+.detail-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: baseline;
+}
+
+.detail-lbl {
+  font-weight: 750;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.detail-val-presider {
+  font-weight: 750;
+  color: #111;
+}
+
+.card-red-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dotted #edd9ca;
+  color: #dc2626;
+  font-weight: 750;
+  font-size: 0.88rem;
+}
+
+.card-interactive-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #f5ede6;
+  justify-content: flex-end;
+}
+
+.btn-card-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d4c2b2;
+  background: #fff;
+  color: #4a3628;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-card-edit:hover {
+  background: #fdf5ef;
+  border-color: #8f3110;
+  color: #8f3110;
+}
+
+.btn-card-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-card-delete:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* MODAL DE EDIÇÃO / ADIÇÃO VISUAL */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 12, 7, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-modal-container {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid #ebdcd0;
+  animation: modalPop 0.2s ease-out;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.admin-modal-head {
+  padding: 20px 24px;
+  border-bottom: 1px solid #ebdcd0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fffcf9;
+  border-radius: 16px 16px 0 0;
+}
+
+.admin-modal-head h3 {
+  margin: 0 0 2px 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2b1b10;
+}
+
+.admin-modal-head p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #7a6a5c;
+}
+
+.admin-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #8c786a;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.admin-modal-close:hover {
+  color: #2b1b10;
+}
+
+.admin-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-section-box {
+  background: #fffcf9;
+  border: 1px solid #f0e6dc;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.modal-section-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8f3110;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.admin-modal-foot {
+  padding: 16px 24px;
+  border-top: 1px solid #ebdcd0;
+  background: #fffcf9;
+  border-radius: 0 0 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 820px) {
+  .admin-escala-visual-board {
+    grid-template-columns: 1fr;
+  }
+}

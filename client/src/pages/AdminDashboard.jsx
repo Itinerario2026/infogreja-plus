@@ -106,6 +106,7 @@ export default function AdminDashboard() {
   // Escala Litúrgica dedicada
   const [scheduleMonthInput, setScheduleMonthInput] = useState("Novembro 2026");
   const [scheduleEditingId, setScheduleEditingId] = useState(null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     dayLabel: "",
     title: "",
@@ -363,7 +364,26 @@ export default function AdminDashboard() {
     }
   }
 
+  function handleNewSchedule() {
+    setScheduleEditingId(null);
+    setScheduleForm({
+      dayLabel: "",
+      title: "",
+      date: "",
+      time: "20:00 hs",
+      presider: "",
+      presiderRole: "Presidente",
+      organizer: "",
+      communionMinisters: "",
+      musicians: "",
+      altarServers: "",
+      notes: ""
+    });
+    setIsScheduleModalOpen(true);
+  }
+
   function handleStartEditSchedule(item) {
+    setIsScheduleModalOpen(true);
     setScheduleEditingId(item.id);
     setScheduleForm({
       dayLabel: item.dayLabel || "",
@@ -383,6 +403,7 @@ export default function AdminDashboard() {
   }
 
   function handleCancelEditSchedule() {
+    setIsScheduleModalOpen(false);
     setScheduleEditingId(null);
     setScheduleForm({
       dayLabel: "",
@@ -428,6 +449,7 @@ export default function AdminDashboard() {
         setFeedback("Nova celebração adicionada à escala com sucesso!");
       }
 
+      setIsScheduleModalOpen(false);
       handleCancelEditSchedule();
       await load();
     } catch (err) {
@@ -669,257 +691,388 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            {/* Conteúdo da Aba Dedicada: Escala Litúrgica */}
-            {churchTab === "escala" && (
-              <section className="church-workspace-content-pane">
-                {/* 1. CONFIGURAÇÃO DO MÊS LITÚRGICO */}
-                <div className="panel" style={{ marginBottom: 28 }}>
-                  <div className="panel-heading">
-                    <span className="eyebrow">Cabeçalho da Folha Litúrgica</span>
-                    <h2>Mês do Calendário Litúrgico</h2>
-                    <p>
-                      Altere o mês de referência que aparece impresso no topo da Folha Litúrgica Oficial
-                      desta comunidade (ex: <em>Calendário De Liturgia Mensal — Mês de Novembro 2026</em>).
-                    </p>
-                  </div>
+            {/* Conteúdo da Aba Dedicada: Escala Litúrgica Visual */}
+            {churchTab === "escala" && (() => {
+              // Separação inteligente para o quadro visual (Quartas / Dias de semana vs Domingos / Fins de semana)
+              const weekdays = currentChurchSchedules.filter(s => {
+                const txt = `${s.dayLabel || ""} ${s.title || ""} ${s.notes || ""}`.toLowerCase();
+                return txt.includes("quarta") || txt.includes("quinta") || txt.includes("terça") || txt.includes("sexta");
+              });
+              const sundays = currentChurchSchedules.filter(s => {
+                const txt = `${s.dayLabel || ""} ${s.title || ""} ${s.notes || ""}`.toLowerCase();
+                return txt.includes("domingo") || txt.includes("sábado") || txt.includes("sabado");
+              });
 
-                  <div className="admin-month-selector-card">
-                    <div className="month-selector-input-row">
-                      <label htmlFor="month-input">Mês Litúrgico Atual:</label>
-                      <input
-                        id="month-input"
-                        type="text"
-                        placeholder="Ex: Novembro 2026"
-                        value={scheduleMonthInput}
-                        onChange={e => setScheduleMonthInput(e.target.value)}
-                      />
+              const colLeft = weekdays.length > 0 ? weekdays : currentChurchSchedules.filter((_, idx) => idx % 2 === 0);
+              const colRight = sundays.length > 0 ? sundays : currentChurchSchedules.filter((_, idx) => idx % 2 !== 0);
+
+              return (
+                <section className="church-workspace-content-pane">
+                  {/* BARRA SUPERIOR: MÊS E BOTÃO ADICIONAR */}
+                  <div className="admin-escala-header-bar">
+                    <div className="admin-escala-month-controls">
+                      <div>
+                        <span className="month-label-eyebrow">Mês da Folha Litúrgica</span>
+                        <div className="month-input-wrapper">
+                          <input
+                            type="text"
+                            className="month-input-styled"
+                            placeholder="Ex: Novembro 2026"
+                            value={scheduleMonthInput}
+                            onChange={e => setScheduleMonthInput(e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className="month-save-btn"
+                            onClick={handleSaveScheduleMonth}
+                          >
+                            💾 Salvar Mês
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="admin-escala-quick-pills">
+                        {["Outubro 2026", "Novembro 2026", "Dezembro 2026", "Janeiro 2027"].map(m => (
+                          <button
+                            key={m}
+                            type="button"
+                            className={`escala-quick-pill ${scheduleMonthInput === m ? "active" : ""}`}
+                            onClick={() => setScheduleMonthInput(m)}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="admin-escala-actions-top">
                       <button
                         type="button"
-                        className="btn btn-primary"
-                        onClick={handleSaveScheduleMonth}
+                        className="btn-add-celebration"
+                        onClick={handleNewSchedule}
                       >
-                        💾 Salvar Mês da Escala
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Adicionar Celebração à Escala
                       </button>
-                    </div>
-
-                    <div className="quick-month-pills">
-                      <span>Sugestões rápidas:</span>
-                      {["Outubro 2026", "Novembro 2026", "Dezembro 2026", "Janeiro 2027"].map(m => (
-                        <button
-                          key={m}
-                          type="button"
-                          className={`pill-btn ${scheduleMonthInput === m ? "active" : ""}`}
-                          onClick={() => setScheduleMonthInput(m)}
-                        >
-                          {m}
-                        </button>
-                      ))}
+                      <a
+                        href={`/igrejas/${selectedChurchId}?aba=escala`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: "10px 14px", height: "fit-content" }}
+                      >
+                        Ver Folha Pública ↗
+                      </a>
                     </div>
                   </div>
-                </div>
 
-                {/* 2. FORMULÁRIO DE ADIÇÃO / EDIÇÃO DE CELEBRAÇÃO */}
-                <div className="panel" id="schedule-editor-box" style={{ marginBottom: 28 }}>
-                  <div className="panel-heading">
-                    <span className="eyebrow">{scheduleEditingId ? "Editar Celebração" : "Nova Celebração"}</span>
-                    <h2>{scheduleEditingId ? "Editar dados da celebração na escala" : `Adicionar celebração à escala de ${currentChurch.title}`}</h2>
-                    <p>Preencha os ministérios e responsáveis litúrgicos para aparecer na folha oficial de celebrações.</p>
-                  </div>
+                  {/* QUADRO VISUAL INTERATIVO DAS CELEBRAÇÕES (MODELO FOLHA LITÚRGICA) */}
+                  <div className="admin-escala-visual-board">
+                    {/* Coluna 1: Quartas / Dias de Semana */}
+                    <div className="admin-escala-col">
+                      <div className="admin-escala-col-header">
+                        <span className="col-header-badge">Quartas-feiras</span>
+                        <h3>Celebrações da Semana ({colLeft.length})</h3>
+                      </div>
 
-                  {scheduleEditingId && (
-                    <div className="editing-banner-notice">
-                      <span>✏️ Você está editando uma celebração existente. As alterações serão salvas na escala.</span>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={handleCancelEditSchedule}>
-                        ✕ Cancelar Edição
-                      </button>
-                    </div>
-                  )}
+                      {colLeft.length > 0 ? (
+                        colLeft.map(item => (
+                          <article key={item.id} className="admin-escala-card-interactive">
+                            <div className="card-interactive-head">
+                              <div>
+                                <h4 className="card-day-title">{item.dayLabel || item.date}</h4>
+                                <span style={{ fontSize: "0.82rem", color: "#666" }}>{item.title}</span>
+                              </div>
+                              <span className="card-time-badge">🕒 {item.time}</span>
+                            </div>
 
-                  <form className="admin-form escala-admin-form" onSubmit={handleSubmitSchedule}>
-                    <div className="form-grid-2">
-                      <label>
-                        Dia / Rótulo na Escala *
-                        <input
-                          required
-                          placeholder="Ex: 1ª Quarta – Dia 04 ou 1º Domingo – Dia 01"
-                          value={scheduleForm.dayLabel}
-                          onChange={e => setScheduleForm({ ...scheduleForm, dayLabel: e.target.value })}
-                        />
-                      </label>
+                            <div className="card-interactive-details">
+                              {item.presider && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">{item.presiderRole || "Presidente"}:</span>
+                                  <strong className="detail-val-presider">{item.presider}.</strong>
+                                </div>
+                              )}
+                              {item.organizer && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Eq. Org.:</span>
+                                  <span>{item.organizer}.</span>
+                                </div>
+                              )}
+                              {item.communionMinisters && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Mt. Ext. S. Com.:</span>
+                                  <span>{item.communionMinisters}.</span>
+                                </div>
+                              )}
+                              {item.musicians && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Instrumentistas:</span>
+                                  <span>{item.musicians}</span>
+                                </div>
+                              )}
+                              {item.altarServers && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Coroinhas:</span>
+                                  <span>{item.altarServers}.</span>
+                                </div>
+                              )}
+                              {item.notes && (
+                                <div className="card-red-note">
+                                  📌 {item.notes}
+                                </div>
+                              )}
+                            </div>
 
-                      <label>
-                        Horário da Celebração *
-                        <input
-                          required
-                          placeholder="Ex: 20:00 hs ou 08:00 hs ou 18:00 hs"
-                          value={scheduleForm.time}
-                          onChange={e => setScheduleForm({ ...scheduleForm, time: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="form-grid-2">
-                      <label>
-                        Função Litúrgica
-                        <select
-                          value={scheduleForm.presiderRole}
-                          onChange={e => setScheduleForm({ ...scheduleForm, presiderRole: e.target.value })}
-                        >
-                          <option value="Presidente">Presidente</option>
-                          <option value="Dirigente">Dirigente</option>
-                          <option value="Celebrante">Celebrante</option>
-                        </select>
-                      </label>
-
-                      <label>
-                        Nome do Dirigente / Presidente *
-                        <input
-                          required
-                          placeholder="Ex: Pe. Igino ou Pe. Thiago ou Helena"
-                          value={scheduleForm.presider}
-                          onChange={e => setScheduleForm({ ...scheduleForm, presider: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="form-grid-2">
-                      <label>
-                        Equipe Organizadora (Eq. Org.)
-                        <input
-                          placeholder="Ex: Legião de Maria, Dízimo, Catequese"
-                          value={scheduleForm.organizer}
-                          onChange={e => setScheduleForm({ ...scheduleForm, organizer: e.target.value })}
-                        />
-                      </label>
-
-                      <label>
-                        Ministros Extraordinários (Mt. Ext. S. Com.)
-                        <input
-                          placeholder="Ex: Alrineide ou Teresa / Sônia"
-                          value={scheduleForm.communionMinisters}
-                          onChange={e => setScheduleForm({ ...scheduleForm, communionMinisters: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="form-grid-2">
-                      <label>
-                        Instrumentistas / Ministério de Música
-                        <input
-                          placeholder="Ex: Renascer em Cristo, Coral São Francisco"
-                          value={scheduleForm.musicians}
-                          onChange={e => setScheduleForm({ ...scheduleForm, musicians: e.target.value })}
-                        />
-                      </label>
-
-                      <label>
-                        Coroinhas Escalados
-                        <input
-                          placeholder="Ex: Vitória, Kemelly e Paulo"
-                          value={scheduleForm.altarServers}
-                          onChange={e => setScheduleForm({ ...scheduleForm, altarServers: e.target.value })}
-                        />
-                      </label>
-                    </div>
-
-                    <label>
-                      Avisos em Destaque Vermelho (Lavar Túnicas, Toalhas, etc.)
-                      <input
-                        placeholder="Ex: Lavar Túnicas: Legião de Maria • Toalhas: Helena"
-                        value={scheduleForm.notes}
-                        onChange={e => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
-                      />
-                    </label>
-
-                    <div className="form-action-buttons">
-                      <button type="submit" className="btn btn-primary">
-                        {scheduleEditingId ? "💾 Salvar Alterações da Celebração" : "➕ Adicionar Celebração à Escala"}
-                      </button>
-                      {scheduleEditingId && (
-                        <button type="button" className="btn btn-secondary" onClick={handleCancelEditSchedule}>
-                          Cancelar
-                        </button>
+                            <div className="card-interactive-actions">
+                              <button
+                                type="button"
+                                className="btn-card-edit"
+                                onClick={() => handleStartEditSchedule(item)}
+                              >
+                                ✏️ Editar
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-card-delete"
+                                onClick={() => handleDeleteSchedule(item.id)}
+                              >
+                                🗑️ Excluir
+                              </button>
+                            </div>
+                          </article>
+                        ))
+                      ) : (
+                        <div className="empty-state" style={{ padding: "20px" }}>
+                          Nenhuma celebração de semana cadastrada.
+                        </div>
                       )}
                     </div>
-                  </form>
-                </div>
 
-                {/* 3. LISTA DE TODAS AS CELEBRAÇÕES DA ESCALA DESTA COMUNIDADE */}
-                <div className="panel">
-                  <div className="panel-heading">
-                    <span className="eyebrow">Celebrações Atuais</span>
-                    <h2>Escala Cadastrada ({currentChurchSchedules.length})</h2>
-                    <p>Todas as celebrações que compõem o calendário litúrgico oficial de {currentChurch.title}.</p>
+                    {/* Coluna 2: Domingos / Fins de Semana */}
+                    <div className="admin-escala-col">
+                      <div className="admin-escala-col-header">
+                        <span className="col-header-badge" style={{ background: "#b91c1c" }}>Domingos</span>
+                        <h3>Celebrações Dominicais ({colRight.length})</h3>
+                      </div>
+
+                      {colRight.length > 0 ? (
+                        colRight.map(item => (
+                          <article key={item.id} className="admin-escala-card-interactive">
+                            <div className="card-interactive-head">
+                              <div>
+                                <h4 className="card-day-title">{item.dayLabel || item.date}</h4>
+                                <span style={{ fontSize: "0.82rem", color: "#666" }}>{item.title}</span>
+                              </div>
+                              <span className="card-time-badge">🕒 {item.time}</span>
+                            </div>
+
+                            <div className="card-interactive-details">
+                              {item.presider && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">{item.presiderRole || "Presidente"}:</span>
+                                  <strong className="detail-val-presider">{item.presider}.</strong>
+                                </div>
+                              )}
+                              {item.organizer && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Eq. Org.:</span>
+                                  <span>{item.organizer}.</span>
+                                </div>
+                              )}
+                              {item.communionMinisters && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Mt. Ext. S. Com.:</span>
+                                  <span>{item.communionMinisters}.</span>
+                                </div>
+                              )}
+                              {item.musicians && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Instrumentistas:</span>
+                                  <span>{item.musicians}</span>
+                                </div>
+                              )}
+                              {item.altarServers && (
+                                <div className="detail-line">
+                                  <span className="detail-lbl">Coroinhas:</span>
+                                  <span>{item.altarServers}.</span>
+                                </div>
+                              )}
+                              {item.notes && (
+                                <div className="card-red-note">
+                                  📌 {item.notes}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="card-interactive-actions">
+                              <button
+                                type="button"
+                                className="btn-card-edit"
+                                onClick={() => handleStartEditSchedule(item)}
+                              >
+                                ✏️ Editar
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-card-delete"
+                                onClick={() => handleDeleteSchedule(item.id)}
+                              >
+                                🗑️ Excluir
+                              </button>
+                            </div>
+                          </article>
+                        ))
+                      ) : (
+                        <div className="empty-state" style={{ padding: "20px" }}>
+                          Nenhuma celebração dominical cadastrada.
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {currentChurchSchedules.length > 0 ? (
-                    <div className="admin-escala-table-wrap">
-                      <table className="admin-table escala-admin-table">
-                        <thead>
-                          <tr>
-                            <th>Dia & Horário</th>
-                            <th>Presidente / Dirigente</th>
-                            <th>Eq. Org.</th>
-                            <th>Mt. Ext. S. Com.</th>
-                            <th>Instrumentistas</th>
-                            <th>Coroinhas</th>
-                            <th>Avisos (Vermelho)</th>
-                            <th>Ações</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {currentChurchSchedules.map(item => (
-                            <tr key={item.id} className={scheduleEditingId === item.id ? "row-highlighted" : ""}>
-                              <td>
-                                <strong>{item.dayLabel || item.date}</strong>
-                                <small style={{ display: "block", color: "#8f3110" }}>🕒 {item.time}</small>
-                              </td>
-                              <td>
-                                <strong>{item.presider || "-"}</strong>
-                                <small style={{ display: "block", color: "#666" }}>({item.presiderRole || "Presidente"})</small>
-                              </td>
-                              <td>{item.organizer || "-"}</td>
-                              <td>{item.communionMinisters || "-"}</td>
-                              <td>{item.musicians || "-"}</td>
-                              <td>{item.altarServers || "-"}</td>
-                              <td>
-                                {item.notes ? (
-                                  <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "0.85rem" }}>
-                                    {item.notes}
-                                  </span>
-                                ) : "-"}
-                              </td>
-                              <td>
-                                <div style={{ display: "flex", gap: "6px" }}>
-                                  <button
-                                    type="button"
-                                    className="btn btn-secondary btn-sm"
-                                    onClick={() => handleStartEditSchedule(item)}
-                                  >
-                                    ✏️ Editar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="danger-btn"
-                                    onClick={() => handleDeleteSchedule(item.id)}
-                                  >
-                                    Excluir
-                                  </button>
+                  {/* MODAL VISUAL E INTUITIVO DE ADIÇÃO / EDIÇÃO */}
+                  {isScheduleModalOpen && (
+                    <div className="admin-modal-overlay" onClick={handleCancelEditSchedule}>
+                      <div className="admin-modal-container" onClick={e => e.stopPropagation()}>
+                        <div className="admin-modal-head">
+                          <div>
+                            <h3>{scheduleEditingId ? "✏️ Editar Celebração da Escala" : "➕ Adicionar Celebração à Escala"}</h3>
+                            <p>{currentChurch.title} — Mês de {scheduleMonthInput}</p>
+                          </div>
+                          <button type="button" className="admin-modal-close" onClick={handleCancelEditSchedule}>×</button>
+                        </div>
+
+                        <form onSubmit={handleSubmitSchedule}>
+                          <div className="admin-modal-body">
+                            {/* Bloco 1: Data e Horário */}
+                            <div className="modal-section-box">
+                              <span className="modal-section-title">1. Data, Dia e Horário</span>
+                              <div className="escala-admin-form">
+                                <div className="form-grid-2">
+                                  <label>
+                                    Dia e Rótulo na Escala *
+                                    <input
+                                      required
+                                      placeholder="Ex: 1ª Quarta – Dia 07 ou 1º Domingo – Dia 04"
+                                      value={scheduleForm.dayLabel}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, dayLabel: e.target.value })}
+                                    />
+                                  </label>
+                                  <label>
+                                    Horário da Celebração *
+                                    <input
+                                      required
+                                      placeholder="Ex: 20:00 hs ou 08:00 hs ou 18:00 hs"
+                                      value={scheduleForm.time}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                                    />
+                                  </label>
                                 </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      Nenhuma celebração cadastrada na escala desta comunidade. Utilize o formulário acima para adicionar!
+                              </div>
+                            </div>
+
+                            {/* Bloco 2: Celebrante / Dirigente */}
+                            <div className="modal-section-box">
+                              <span className="modal-section-title">2. Celebrante / Dirigente</span>
+                              <div className="escala-admin-form">
+                                <div className="form-grid-2">
+                                  <label>
+                                    Função Litúrgica
+                                    <select
+                                      value={scheduleForm.presiderRole}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, presiderRole: e.target.value })}
+                                    >
+                                      <option value="Presidente">Presidente</option>
+                                      <option value="Dirigente">Dirigente</option>
+                                      <option value="Celebrante">Celebrante</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    Nome do Celebrante *
+                                    <input
+                                      required
+                                      placeholder="Ex: Pe. Igino ou Pe. Thiago ou Helena"
+                                      value={scheduleForm.presider}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, presider: e.target.value })}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bloco 3: Equipes Litúrgicas */}
+                            <div className="modal-section-box">
+                              <span className="modal-section-title">3. Equipes e Ministérios</span>
+                              <div className="escala-admin-form">
+                                <div className="form-grid-2">
+                                  <label>
+                                    Equipe Organizadora (Eq. Org.)
+                                    <input
+                                      placeholder="Ex: Legião de Maria, Pastoral do Dízimo"
+                                      value={scheduleForm.organizer}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, organizer: e.target.value })}
+                                    />
+                                  </label>
+                                  <label>
+                                    Ministros Extraordinários (Mt. Ext. S. Com.)
+                                    <input
+                                      placeholder="Ex: Alrineide ou Teresa / Sônia"
+                                      value={scheduleForm.communionMinisters}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, communionMinisters: e.target.value })}
+                                    />
+                                  </label>
+                                </div>
+                                <div className="form-grid-2" style={{ marginTop: "12px" }}>
+                                  <label>
+                                    Instrumentistas / Ministério de Música
+                                    <input
+                                      placeholder="Ex: Renascer em Cristo, Coral São Francisco"
+                                      value={scheduleForm.musicians}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, musicians: e.target.value })}
+                                    />
+                                  </label>
+                                  <label>
+                                    Coroinhas Escalados
+                                    <input
+                                      placeholder="Ex: Vitória, Kemelly e Paulo"
+                                      value={scheduleForm.altarServers}
+                                      onChange={e => setScheduleForm({ ...scheduleForm, altarServers: e.target.value })}
+                                    />
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bloco 4: Avisos e Zelo em Vermelho */}
+                            <div className="modal-section-box">
+                              <span className="modal-section-title">4. Avisos em Destaque Vermelho</span>
+                              <label>
+                                Observações de zelo e preparativos
+                                <input
+                                  placeholder="Ex: Lavar Túnicas: Legião de Maria • Toalhas: Helena"
+                                  value={scheduleForm.notes}
+                                  onChange={e => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+                                />
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="admin-modal-foot">
+                            <button type="button" className="btn btn-secondary" onClick={handleCancelEditSchedule}>
+                              Cancelar
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                              {scheduleEditingId ? "💾 Salvar Alterações" : "➕ Adicionar à Escala"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
                   )}
-                </div>
-              </section>
-            )}
+                </section>
+              );
+            })()}
 
             {/* Conteúdo da Aba 1: Dados e Foto */}
             {churchTab === "dados" && (

@@ -239,12 +239,14 @@ export default function ChurchPage() {
 
                 <div className="folha-liturgia-container">
                   <div className="folha-liturgia-paper">
-                    <header className="folha-liturgia-header">
-                      <h2 className="folha-liturgia-church-name">Comunidade {church.title}</h2>
+                    <div className="folha-liturgia-header">
+                      <h2 className="folha-liturgia-church-name">
+                        {church.title?.toLowerCase().startsWith("comunidade") ? church.title : `Comunidade ${church.title}`}
+                      </h2>
                       <h3 className="folha-liturgia-month-title">
                         Calendário De Liturgia Mensal — Mês de {(schedules.find(s => s.month)?.month || "Novembro 2026").replace(/^mês de\s+/i, "")}
                       </h3>
-                    </header>
+                    </div>
 
                     {schedules.length > 0 ? (
                       <div className="folha-liturgia-columns">

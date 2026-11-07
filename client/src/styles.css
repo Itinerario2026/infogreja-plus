@@ -5396,13 +5396,12 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
 }
 
 /* ==============================================================
-   REGRAS DE IMPRESSÃO (/* ==============================================================
    REGRAS DE IMPRESSÃO (@media print) PARA A FOLHA LITÚRGICA OFICIAL (1 PÁGINA A4)
    ============================================================== */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm;
+    margin: 14mm 14mm 14mm 14mm;
   }
 
   *, *::before, *::after {
@@ -5411,8 +5410,13 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   }
 
   /* Ocultar elementos da interface web para imprimir APENAS a folha */
-  header, footer, nav,
-  .site-header, .site-footer,
+  .public-header,
+  .site-header,
+  header.site-header,
+  header.public-header,
+  header.site-nav,
+  footer,
+  nav,
   .church-page-hero,
   .church-tabs-wrap,
   .church-tab-panel-heading,
@@ -5439,51 +5443,61 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
 
   .folha-liturgia-container {
     display: block !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     padding: 0 !important;
     width: 100% !important;
   }
 
   .folha-liturgia-paper {
+    display: block !important;
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
     page-break-inside: avoid !important;
   }
 
-  /* Cabeçalho da folha em vermelho script */
+  /* Cabeçalho da folha em destaque com vermelho clássico e fonte cursiva */
   .folha-liturgia-header {
+    display: block !important;
+    visibility: visible !important;
     text-align: center !important;
-    margin: 0 0 10px 0 !important;
-    padding: 0 0 6px 0 !important;
-    border-bottom: 1.5px dashed #ccc !important;
+    margin: 0 0 20px 0 !important;
+    padding: 0 0 10px 0 !important;
+    border-bottom: 2px dashed #b91c1c !important;
   }
 
   .folha-liturgia-church-name {
+    display: block !important;
+    visibility: visible !important;
     font-family: 'Brush Script MT', 'Dancing Script', 'Caveat', 'Segoe Script', cursive, Georgia, serif !important;
     color: #c5221f !important;
-    font-size: 26pt !important;
+    font-size: 30pt !important;
     font-weight: 700 !important;
-    margin: 0 !important;
-    line-height: 1.1 !important;
+    margin: 0 0 4px 0 !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
   }
 
   .folha-liturgia-month-title {
+    display: block !important;
+    visibility: visible !important;
     color: #b91c1c !important;
-    font-size: 11.5pt !important;
+    font-size: 13.5pt !important;
     font-weight: 700 !important;
-    margin: 2px 0 0 0 !important;
+    margin: 0 !important;
+    letter-spacing: 0.3px !important;
+    text-align: center !important;
   }
 
-  /* 2 Colunas lado a lado fixas no papel A4 */
+  /* 2 Colunas equilibradas preenchendo a folha com harmonia */
   .folha-liturgia-columns {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 10mm !important;
+    gap: 14mm !important;
     width: 100% !important;
     page-break-inside: avoid !important;
   }
@@ -5491,42 +5505,45 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   .folha-liturgia-col {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 14px !important;
   }
 
   .folha-liturgia-item {
-    padding-bottom: 5px !important;
-    border-bottom: 1px dotted #bbb !important;
+    display: block !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px dotted #888 !important;
     page-break-inside: avoid !important;
   }
 
   .folha-item-title-underlined {
-    font-size: 9.8pt !important;
+    font-size: 10.8pt !important;
     font-weight: 800 !important;
     color: #000000 !important;
     text-decoration: underline !important;
-    margin: 0 0 2px 0 !important;
-    line-height: 1.2 !important;
+    text-underline-offset: 3px !important;
+    margin: 0 0 5px 0 !important;
+    line-height: 1.25 !important;
   }
 
   .folha-item-fields {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1.5px !important;
+    gap: 2.5px !important;
   }
 
   .folha-field-row {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 3px !important;
-    font-size: 8.4pt !important;
-    line-height: 1.3 !important;
+    gap: 4px !important;
+    font-size: 9.6pt !important;
+    line-height: 1.38 !important;
     color: #1a1a1a !important;
   }
 
   .folha-field-label {
     font-weight: 700 !important;
     color: #000000 !important;
+    white-space: nowrap !important;
   }
 
   .folha-field-val {
@@ -5534,19 +5551,20 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   }
 
   .folha-field-presider {
-    font-weight: 700 !important;
+    font-weight: 750 !important;
     color: #000000 !important;
   }
 
   .folha-item-notes-block {
-    margin-top: 2px !important;
+    margin-top: 3px !important;
   }
 
   .folha-note-red {
+    display: block !important;
     color: #dc2626 !important;
-    font-weight: 700 !important;
-    font-size: 8.4pt !important;
-    line-height: 1.3 !important;
+    font-weight: 750 !important;
+    font-size: 9.6pt !important;
+    line-height: 1.35 !important;
   }
 }
 

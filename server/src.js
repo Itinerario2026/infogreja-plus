@@ -464,6 +464,31 @@ app.delete("/api/admin/music-suggestions/:id", requireAdmin, async (req, res, ne
   }
 });
 
+app.put("/api/admin/content/:type/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const { type, id } = req.params;
+    const collection = collectionByType[type];
+    if (!collection) return res.status(400).json({ message: "Tipo de conteúdo inválido." });
+
+    const updated = await db.updateContent(type, id, req.body);
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put("/api/admin/churches/:id/schedule-month", requireAdmin, async (req, res, next) => {
+  try {
+    const { month } = req.body;
+    if (!month) return res.status(400).json({ message: "Mês é obrigatório." });
+
+    const result = await db.updateScheduleMonth(req.params.id, month.trim());
+    res.json({ message: `Mês da escala atualizado para "${month.trim()}" com sucesso!`, ...result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.delete("/api/admin/content/:type/:id", requireAdmin, async (req, res, next) => {
   try {
     const collection = collectionByType[req.params.type];

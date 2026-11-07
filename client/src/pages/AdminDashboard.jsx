@@ -103,6 +103,22 @@ export default function AdminDashboard() {
   const [musicStatusFilter, setMusicStatusFilter] = useState("all");
   const [feedbackMap, setFeedbackMap] = useState({});
   const [adminPlayingAudioId, setAdminPlayingAudioId] = useState(null);
+  // Escala Litúrgica dedicada
+  const [scheduleMonthInput, setScheduleMonthInput] = useState("Novembro 2026");
+  const [scheduleEditingId, setScheduleEditingId] = useState(null);
+  const [scheduleForm, setScheduleForm] = useState({
+    dayLabel: "",
+    title: "",
+    date: "",
+    time: "20:00 hs",
+    presider: "",
+    presiderRole: "Presidente",
+    organizer: "",
+    communionMinisters: "",
+    musicians: "",
+    altarServers: "",
+    notes: ""
+  });
 
   async function load() {
     try {
@@ -187,6 +203,7 @@ export default function AdminDashboard() {
   const currentChurchMusic = (data.music_suggestions || []).filter(m => m.churchId === selectedChurchId);
   const currentChurchPendingMusic = currentChurchMusic.filter(m => m.status === "pending").length;
   const currentChurchContacts = (data.contacts || []).filter(c => c.churchId === selectedChurchId);
+  const currentChurchSchedules = (data.schedules || []).filter(s => s.churchId === selectedChurchId);
 
   const filteredChurchMusic = currentChurchMusic.filter(m => {
     if (musicStatusFilter !== "all" && m.status !== musicStatusFilter) return false;
@@ -215,6 +232,10 @@ export default function AdminDashboard() {
     setPastoralForm(firstPastoral ? toPastoralForm(firstPastoral) : emptyPastoralForm);
 
     setForm(current => ({ ...current, churchId: id, pastoralId: "" }));
+    const chSchedules = (data.schedules || []).filter(s => s.churchId === id);
+    const existingMonth = chSchedules.find(s => s.month)?.month || "Novembro 2026";
+    setScheduleMonthInput(existingMonth);
+    setScheduleEditingId(null);
     setFeedback("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -330,6 +351,101 @@ export default function AdminDashboard() {
     setPastoralForm(selected ? toPastoralForm(selected) : emptyPastoralForm);
   }
 
+    async function handleSaveScheduleMonth() {
+    if (!scheduleMonthInput.trim()) return;
+    setFeedback("");
+    try {
+      await api.updateScheduleMonth(selectedChurchId, scheduleMonthInput.trim());
+      setFeedback(`Mês litúrgico atualizado para "${scheduleMonthInput.trim()}" com sucesso!`);
+      await load();
+    } catch (err) {
+      setFeedback(err.message || "Erro ao atualizar mês da escala.");
+    }
+  }
+
+  function handleStartEditSchedule(item) {
+    setScheduleEditingId(item.id);
+    setScheduleForm({
+      dayLabel: item.dayLabel || "",
+      title: item.title || "",
+      date: item.date || "",
+      time: item.time || "",
+      presider: item.presider || "",
+      presiderRole: item.presiderRole || "Presidente",
+      organizer: item.organizer || "",
+      communionMinisters: item.communionMinisters || "",
+      musicians: item.musicians || "",
+      altarServers: item.altarServers || "",
+      notes: item.notes || ""
+    });
+    const elem = document.getElementById("schedule-editor-box");
+    if (elem) elem.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleCancelEditSchedule() {
+    setScheduleEditingId(null);
+    setScheduleForm({
+      dayLabel: "",
+      title: "",
+      date: "",
+      time: "20:00 hs",
+      presider: "",
+      presiderRole: "Presidente",
+      organizer: "",
+      communionMinisters: "",
+      musicians: "",
+      altarServers: "",
+      notes: ""
+    });
+  }
+
+  async function handleSubmitSchedule(e) {
+    e.preventDefault();
+    setFeedback("");
+    try {
+      const payload = {
+        churchId: selectedChurchId,
+        pastoralId: "",
+        title: scheduleForm.title.trim() || `${scheduleForm.dayLabel || "Celebração"} – ${scheduleForm.presiderRole || "Missa"}`,
+        dayLabel: scheduleForm.dayLabel.trim(),
+        date: scheduleForm.date.trim(),
+        time: scheduleForm.time.trim(),
+        presider: scheduleForm.presider.trim(),
+        presiderRole: scheduleForm.presiderRole,
+        organizer: scheduleForm.organizer.trim(),
+        communionMinisters: scheduleForm.communionMinisters.trim(),
+        musicians: scheduleForm.musicians.trim(),
+        altarServers: scheduleForm.altarServers.trim(),
+        notes: scheduleForm.notes.trim(),
+        month: scheduleMonthInput.trim() || "Novembro 2026"
+      };
+
+      if (scheduleEditingId) {
+        await api.updateContent("schedule", scheduleEditingId, payload);
+        setFeedback("Celebração da escala atualizada com sucesso!");
+      } else {
+        await api.addContent({ type: "schedule", ...payload });
+        setFeedback("Nova celebração adicionada à escala com sucesso!");
+      }
+
+      handleCancelEditSchedule();
+      await load();
+    } catch (err) {
+      setFeedback(err.message || "Erro ao salvar celebração na escala.");
+    }
+  }
+
+  async function handleDeleteSchedule(id) {
+    if (!window.confirm("Deseja realmente remover esta celebração da escala?")) return;
+    try {
+      await api.deleteContent("schedule", id);
+      setFeedback("Celebração removida da escala com sucesso.");
+      await load();
+    } catch (err) {
+      setFeedback(err.message || "Erro ao excluir celebração.");
+    }
+  }
+
   function toggleAdminAudio(id) {
     setAdminPlayingAudioId(current => current === id ? null : id);
   }
@@ -413,6 +529,12 @@ export default function AdminDashboard() {
               onClick={() => setChurchTab("dados")}
             >
               Dados da Comunidade & Foto
+            </button>
+            <button
+              className={`sidebar-nav-tab ${churchTab === "escala" ? "active" : ""}`}
+              onClick={() => setChurchTab("escala")}
+            >
+              📅 Escala Litúrgica ({currentChurchSchedules.length})
             </button>
             <button
               className={`sidebar-nav-tab ${churchTab === "pastorais" ? "active" : ""}`}
@@ -509,6 +631,13 @@ export default function AdminDashboard() {
               </button>
               <button
                 type="button"
+                className={`church-workspace-tab-btn ${churchTab === "escala" ? "active" : ""}`}
+                onClick={() => setChurchTab("escala")}
+              >
+                📅 Escala Litúrgica ({currentChurchSchedules.length})
+              </button>
+              <button
+                type="button"
                 className={`church-workspace-tab-btn ${churchTab === "pastorais" ? "active" : ""}`}
                 onClick={() => setChurchTab("pastorais")}
               >
@@ -539,6 +668,258 @@ export default function AdminDashboard() {
                 Mensagens ({currentChurchContacts.length})
               </button>
             </div>
+
+            {/* Conteúdo da Aba Dedicada: Escala Litúrgica */}
+            {churchTab === "escala" && (
+              <section className="church-workspace-content-pane">
+                {/* 1. CONFIGURAÇÃO DO MÊS LITÚRGICO */}
+                <div className="panel" style={{ marginBottom: 28 }}>
+                  <div className="panel-heading">
+                    <span className="eyebrow">Cabeçalho da Folha Litúrgica</span>
+                    <h2>Mês do Calendário Litúrgico</h2>
+                    <p>
+                      Altere o mês de referência que aparece impresso no topo da Folha Litúrgica Oficial
+                      desta comunidade (ex: <em>Calendário De Liturgia Mensal — Mês de Novembro 2026</em>).
+                    </p>
+                  </div>
+
+                  <div className="admin-month-selector-card">
+                    <div className="month-selector-input-row">
+                      <label htmlFor="month-input">Mês Litúrgico Atual:</label>
+                      <input
+                        id="month-input"
+                        type="text"
+                        placeholder="Ex: Novembro 2026"
+                        value={scheduleMonthInput}
+                        onChange={e => setScheduleMonthInput(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSaveScheduleMonth}
+                      >
+                        💾 Salvar Mês da Escala
+                      </button>
+                    </div>
+
+                    <div className="quick-month-pills">
+                      <span>Sugestões rápidas:</span>
+                      {["Outubro 2026", "Novembro 2026", "Dezembro 2026", "Janeiro 2027"].map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          className={`pill-btn ${scheduleMonthInput === m ? "active" : ""}`}
+                          onClick={() => setScheduleMonthInput(m)}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. FORMULÁRIO DE ADIÇÃO / EDIÇÃO DE CELEBRAÇÃO */}
+                <div className="panel" id="schedule-editor-box" style={{ marginBottom: 28 }}>
+                  <div className="panel-heading">
+                    <span className="eyebrow">{scheduleEditingId ? "Editar Celebração" : "Nova Celebração"}</span>
+                    <h2>{scheduleEditingId ? "Editar dados da celebração na escala" : `Adicionar celebração à escala de ${currentChurch.title}`}</h2>
+                    <p>Preencha os ministérios e responsáveis litúrgicos para aparecer na folha oficial de celebrações.</p>
+                  </div>
+
+                  {scheduleEditingId && (
+                    <div className="editing-banner-notice">
+                      <span>✏️ Você está editando uma celebração existente. As alterações serão salvas na escala.</span>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={handleCancelEditSchedule}>
+                        ✕ Cancelar Edição
+                      </button>
+                    </div>
+                  )}
+
+                  <form className="admin-form escala-admin-form" onSubmit={handleSubmitSchedule}>
+                    <div className="form-grid-2">
+                      <label>
+                        Dia / Rótulo na Escala *
+                        <input
+                          required
+                          placeholder="Ex: 1ª Quarta – Dia 04 ou 1º Domingo – Dia 01"
+                          value={scheduleForm.dayLabel}
+                          onChange={e => setScheduleForm({ ...scheduleForm, dayLabel: e.target.value })}
+                        />
+                      </label>
+
+                      <label>
+                        Horário da Celebração *
+                        <input
+                          required
+                          placeholder="Ex: 20:00 hs ou 08:00 hs ou 18:00 hs"
+                          value={scheduleForm.time}
+                          onChange={e => setScheduleForm({ ...scheduleForm, time: e.target.value })}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="form-grid-2">
+                      <label>
+                        Função Litúrgica
+                        <select
+                          value={scheduleForm.presiderRole}
+                          onChange={e => setScheduleForm({ ...scheduleForm, presiderRole: e.target.value })}
+                        >
+                          <option value="Presidente">Presidente</option>
+                          <option value="Dirigente">Dirigente</option>
+                          <option value="Celebrante">Celebrante</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        Nome do Dirigente / Presidente *
+                        <input
+                          required
+                          placeholder="Ex: Pe. Igino ou Pe. Thiago ou Helena"
+                          value={scheduleForm.presider}
+                          onChange={e => setScheduleForm({ ...scheduleForm, presider: e.target.value })}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="form-grid-2">
+                      <label>
+                        Equipe Organizadora (Eq. Org.)
+                        <input
+                          placeholder="Ex: Legião de Maria, Dízimo, Catequese"
+                          value={scheduleForm.organizer}
+                          onChange={e => setScheduleForm({ ...scheduleForm, organizer: e.target.value })}
+                        />
+                      </label>
+
+                      <label>
+                        Ministros Extraordinários (Mt. Ext. S. Com.)
+                        <input
+                          placeholder="Ex: Alrineide ou Teresa / Sônia"
+                          value={scheduleForm.communionMinisters}
+                          onChange={e => setScheduleForm({ ...scheduleForm, communionMinisters: e.target.value })}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="form-grid-2">
+                      <label>
+                        Instrumentistas / Ministério de Música
+                        <input
+                          placeholder="Ex: Renascer em Cristo, Coral São Francisco"
+                          value={scheduleForm.musicians}
+                          onChange={e => setScheduleForm({ ...scheduleForm, musicians: e.target.value })}
+                        />
+                      </label>
+
+                      <label>
+                        Coroinhas Escalados
+                        <input
+                          placeholder="Ex: Vitória, Kemelly e Paulo"
+                          value={scheduleForm.altarServers}
+                          onChange={e => setScheduleForm({ ...scheduleForm, altarServers: e.target.value })}
+                        />
+                      </label>
+                    </div>
+
+                    <label>
+                      Avisos em Destaque Vermelho (Lavar Túnicas, Toalhas, etc.)
+                      <input
+                        placeholder="Ex: Lavar Túnicas: Legião de Maria • Toalhas: Helena"
+                        value={scheduleForm.notes}
+                        onChange={e => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+                      />
+                    </label>
+
+                    <div className="form-action-buttons">
+                      <button type="submit" className="btn btn-primary">
+                        {scheduleEditingId ? "💾 Salvar Alterações da Celebração" : "➕ Adicionar Celebração à Escala"}
+                      </button>
+                      {scheduleEditingId && (
+                        <button type="button" className="btn btn-secondary" onClick={handleCancelEditSchedule}>
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+
+                {/* 3. LISTA DE TODAS AS CELEBRAÇÕES DA ESCALA DESTA COMUNIDADE */}
+                <div className="panel">
+                  <div className="panel-heading">
+                    <span className="eyebrow">Celebrações Atuais</span>
+                    <h2>Escala Cadastrada ({currentChurchSchedules.length})</h2>
+                    <p>Todas as celebrações que compõem o calendário litúrgico oficial de {currentChurch.title}.</p>
+                  </div>
+
+                  {currentChurchSchedules.length > 0 ? (
+                    <div className="admin-escala-table-wrap">
+                      <table className="admin-table escala-admin-table">
+                        <thead>
+                          <tr>
+                            <th>Dia & Horário</th>
+                            <th>Presidente / Dirigente</th>
+                            <th>Eq. Org.</th>
+                            <th>Mt. Ext. S. Com.</th>
+                            <th>Instrumentistas</th>
+                            <th>Coroinhas</th>
+                            <th>Avisos (Vermelho)</th>
+                            <th>Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentChurchSchedules.map(item => (
+                            <tr key={item.id} className={scheduleEditingId === item.id ? "row-highlighted" : ""}>
+                              <td>
+                                <strong>{item.dayLabel || item.date}</strong>
+                                <small style={{ display: "block", color: "#8f3110" }}>🕒 {item.time}</small>
+                              </td>
+                              <td>
+                                <strong>{item.presider || "-"}</strong>
+                                <small style={{ display: "block", color: "#666" }}>({item.presiderRole || "Presidente"})</small>
+                              </td>
+                              <td>{item.organizer || "-"}</td>
+                              <td>{item.communionMinisters || "-"}</td>
+                              <td>{item.musicians || "-"}</td>
+                              <td>{item.altarServers || "-"}</td>
+                              <td>
+                                {item.notes ? (
+                                  <span style={{ color: "#dc2626", fontWeight: 700, fontSize: "0.85rem" }}>
+                                    {item.notes}
+                                  </span>
+                                ) : "-"}
+                              </td>
+                              <td>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => handleStartEditSchedule(item)}
+                                  >
+                                    ✏️ Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="danger-btn"
+                                    onClick={() => handleDeleteSchedule(item.id)}
+                                  >
+                                    Excluir
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      Nenhuma celebração cadastrada na escala desta comunidade. Utilize o formulário acima para adicionar!
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {/* Conteúdo da Aba 1: Dados e Foto */}
             {churchTab === "dados" && (

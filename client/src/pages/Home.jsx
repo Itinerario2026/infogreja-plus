@@ -41,9 +41,9 @@ export default function Home() {
 
             <div className="hero-visual-panel">
               <div className="hero-visual-grid">
-                <img src="/churches/sao_joao_batista.jpg" alt="São João Batista"/>
-                <img src="/churches/ns_aparecida.jpg" alt="Nossa Senhora Aparecida"/>
                 <img src="/churches/santa_luzia.jpg" alt="Santa Luzia"/>
+                <img src="/churches/ns_aparecida.jpg" alt="Nossa Senhora Aparecida"/>
+                <img src="/churches/sao_francisco_assis.jpg" alt="São Francisco de Assis"/>
                 <img src="/churches/sagrado_coracao_jesus.jpg" alt="Sagrado Coração"/>
               </div>
               <div className="hero-floating-card card-events">

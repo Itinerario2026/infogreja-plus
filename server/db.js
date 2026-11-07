@@ -285,6 +285,50 @@ export const db = {
     return local[table].length < initial;
   },
 
+  async updateContent(type, id, payload) {
+    const table = collectionByType[type];
+    if (!table) throw new Error("Tipo de conteúdo inválido");
+
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from(table).update(payload).eq("id", id).select().maybeSingle();
+        if (error) throw error;
+        if (data) return data;
+      } catch (err) {
+        console.warn(`Aviso ao atualizar conteúdo em ${table} no Supabase, gravando local:`, err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (!local[table]) local[table] = [];
+    const idx = local[table].findIndex(x => x.id === id);
+    if (idx >= 0) {
+      local[table][idx] = { ...local[table][idx], ...payload };
+      writeLocalDb(local);
+      return local[table][idx];
+    }
+    return { id, ...payload };
+  },
+
+  async updateScheduleMonth(churchId, month) {
+    if (supabase) {
+      try {
+        await supabase.from("schedules").update({ month }).eq("churchId", churchId);
+      } catch (err) {
+        console.warn("Aviso ao atualizar mês das escalas no Supabase:", err.message);
+      }
+    }
+    const local = readLocalDb();
+    if (Array.isArray(local.schedules)) {
+      local.schedules.forEach(s => {
+        if (s.churchId === churchId) {
+          s.month = month;
+        }
+      });
+    }
+    writeLocalDb(local);
+    return { churchId, month };
+  },
+
   async getAdmin(email) {
     if (supabase) {
       try {

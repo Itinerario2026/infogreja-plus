@@ -5396,32 +5396,159 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
 }
 
 /* ==============================================================
-   REGRAS DE IMPRESSÃO (@media print) PARA A FOLHA LITÚRGICA
+   REGRAS DE IMPRESSÃO (/* ==============================================================
+   REGRAS DE IMPRESSÃO (@media print) PARA A FOLHA LITÚRGICA OFICIAL (1 PÁGINA A4)
    ============================================================== */
 @media print {
-  header, footer, nav, .church-page-hero, .church-tabs-wrap, .folha-liturgia-actions, .site-header, .site-footer {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ocultar elementos da interface web para imprimir APENAS a folha */
+  header, footer, nav,
+  .site-header, .site-footer,
+  .church-page-hero,
+  .church-tabs-wrap,
+  .church-tab-panel-heading,
+  .folha-liturgia-actions,
+  .escala-programs-section,
+  .admin-layout, .sidebar,
+  .registration-modal,
+  .church-page-back-row {
     display: none !important;
   }
-  body, main, .church-page, .church-tab-section, .container {
+
+  /* Resetar containers para ocupar 100% da folha */
+  html, body, main,
+  .church-page, .church-tab-section,
+  .church-tab-panel, .container {
     background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
   }
+
   .folha-liturgia-container {
     display: block !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
   }
+
   .folha-liturgia-paper {
+    background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 10mm 15mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
     max-width: 100% !important;
-    page-break-inside: avoid;
+    page-break-inside: avoid !important;
+  }
+
+  /* Cabeçalho da folha em vermelho script */
+  .folha-liturgia-header {
+    text-align: center !important;
+    margin: 0 0 10px 0 !important;
+    padding: 0 0 6px 0 !important;
+    border-bottom: 1.5px dashed #ccc !important;
+  }
+
+  .folha-liturgia-church-name {
+    font-family: 'Brush Script MT', 'Dancing Script', 'Caveat', 'Segoe Script', cursive, Georgia, serif !important;
+    color: #c5221f !important;
+    font-size: 26pt !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  .folha-liturgia-month-title {
+    color: #b91c1c !important;
+    font-size: 11.5pt !important;
+    font-weight: 700 !important;
+    margin: 2px 0 0 0 !important;
+  }
+
+  /* 2 Colunas lado a lado fixas no papel A4 */
+  .folha-liturgia-columns {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10mm !important;
+    width: 100% !important;
+    page-break-inside: avoid !important;
+  }
+
+  .folha-liturgia-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .folha-liturgia-item {
+    padding-bottom: 5px !important;
+    border-bottom: 1px dotted #bbb !important;
+    page-break-inside: avoid !important;
+  }
+
+  .folha-item-title-underlined {
+    font-size: 9.8pt !important;
+    font-weight: 800 !important;
+    color: #000000 !important;
+    text-decoration: underline !important;
+    margin: 0 0 2px 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  .folha-item-fields {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5px !important;
+  }
+
+  .folha-field-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    font-size: 8.4pt !important;
+    line-height: 1.3 !important;
+    color: #1a1a1a !important;
+  }
+
+  .folha-field-label {
+    font-weight: 700 !important;
+    color: #000000 !important;
+  }
+
+  .folha-field-val {
+    color: #222222 !important;
+  }
+
+  .folha-field-presider {
+    font-weight: 700 !important;
+    color: #000000 !important;
+  }
+
+  .folha-item-notes-block {
+    margin-top: 2px !important;
+  }
+
+  .folha-note-red {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    font-size: 8.4pt !important;
+    line-height: 1.3 !important;
   }
 }
-
 
 /* ==============================================================
    ADMIN: ABA DEDICADA DE ESCALA LITÚRGICA

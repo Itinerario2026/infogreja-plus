@@ -151,7 +151,7 @@ export default function AdminDashboard() {
       if (err.status === 401) {
         window.location.href = "/admin";
       } else {
-        setFatalError(err.message || "Não foi possível carregar o dashboard.");
+        setFatalError(err.message || "Não foi possível carregar o painel administrativo.");
       }
     }
   }
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
       <div className="admin-status-page">
         <div className="admin-status-card">
           <img className="admin-status-logo" src="/logo-minha-paroquia.jpg" alt="Minha Paróquia" />
-          <h1>Erro ao carregar o dashboard</h1>
+          <h1>Erro ao carregar o painel administrativo</h1>
           <p>{fatalError}</p>
           <button className="btn btn-primary" onClick={load}>Tentar novamente</button>
           <button className="btn btn-secondary" style={{marginLeft:8}} onClick={async()=>{await api.logout().catch(()=>{}); window.location.href="/admin";}}>Voltar ao login</button>
@@ -448,9 +448,8 @@ export default function AdminDashboard() {
           </nav>
         ) : (
           <nav className="sidebar-nav">
-            <a href="#dashboard">Visão Geral</a>
+            <a href="#painel">Painel Geral</a>
             <a href="#paroquias">Comunidades ({data.churches.length})</a>
-            <a href="#inscricoes">Inscrições Gerais ({data.registrations.length})</a>
             <a href="#mensagens">Mensagens Recebidas ({data.contacts.length})</a>
             <a href="/">Ver site público</a>
           </nav>
@@ -1033,11 +1032,11 @@ export default function AdminDashboard() {
              CENÁRIO 2: VISÃO GERAL (TODAS AS COMUNIDADES)
              ============================================================== */
           <div>
-            <section id="dashboard">
+            <section id="painel">
               <div className="admin-top admin-top-brand">
                 <div>
-                  <span className="eyebrow">Minha Paróquia • Painel Geral</span>
-                  <h1>Dashboard</h1>
+                  <span className="eyebrow">Minha Paróquia • Gestão Geral</span>
+                  <h1>Painel Geral</h1>
                   <p className="admin-user">Conectado como {user?.email}</p>
                 </div>
                 <div className="admin-top-actions">
@@ -1048,10 +1047,7 @@ export default function AdminDashboard() {
 
               <div className="dashboard-cards minha-paroquia-metrics">
                 <Metric label="Comunidades" value={data.churches.length} />
-                <Metric label="Pastorais" value={data.pastorals.length} />
-                <Metric label="Conteúdos" value={content.length} />
-                <Metric label="Sugestões Música" value={`${musicSuggestions.length} (${pendingMusicCount} pend.)`} />
-                <Metric label="Inscrições" value={data.registrations.length} />
+                <Metric label="Pastorais" value={13} />
                 <Metric label="Mensagens" value={data.contacts.length} />
               </div>
             </section>

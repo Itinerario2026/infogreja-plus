@@ -2801,8 +2801,8 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
 .admin-user{margin:7px 0 0;color:var(--admin-muted);}
 
 .minha-paroquia-metrics{
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:14px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
   margin-top:18px;
 }
 .minha-paroquia-admin .metric-card{

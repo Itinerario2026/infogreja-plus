@@ -62,7 +62,7 @@ export default function AdminLogin() {
         {mode === "login" ? (
           <div className="login-card">
             <span className="eyebrow">Acesso administrativo</span>
-            <h1>Entrar no dashboard</h1>
+            <h1>Painel Administrativo</h1>
             <p>Use o e-mail e a senha configurados na primeira inicialização do sistema.</p>
             <form onSubmit={submit}>
               <label>E-mail<input type="email" required autoComplete="username" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label>

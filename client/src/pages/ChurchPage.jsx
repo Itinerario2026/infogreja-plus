@@ -72,6 +72,7 @@ export default function ChurchPage() {
   const [contact, setContact] = useState({ name: "", email: "", phone: "", subject: "Dúvida geral", message: "" });
   const [feedback, setFeedback] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const rawTab = params.get("aba");
   const requestedTab = (rawTab === "horarios" || rawTab === "programacao")
@@ -135,6 +136,79 @@ export default function ChurchPage() {
 
   const leftCol = weekdaySchedules.length > 0 ? weekdaySchedules : schedules.filter((_, idx) => idx % 2 === 0);
   const rightCol = sundaySchedules.length > 0 ? sundaySchedules : schedules.filter((_, idx) => idx % 2 !== 0);
+
+  async function handleDownloadPdf() {
+    const paper = document.getElementById("folha-liturgia-paper");
+    if (!paper) return;
+
+    setDownloadingPdf(true);
+    try {
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const churchNameClean = (church.title || "comunidade")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const monthClean = (schedules.find(s => s.month)?.month || "novembro-2026")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const fileName = `escala-${churchNameClean}-${monthClean}.pdf`;
+
+      // Clona a folha litúrgica para padronizar as dimensões no formato A4 retrato de 2 colunas
+      const clone = paper.cloneNode(true);
+      clone.style.width = "750px";
+      clone.style.maxWidth = "750px";
+      clone.style.margin = "0 auto";
+      clone.style.padding = "24px 28px";
+      clone.style.boxShadow = "none";
+      clone.style.border = "none";
+      clone.style.borderRadius = "0";
+      clone.style.background = "#ffffff";
+      clone.style.boxSizing = "border-box";
+
+      // Garante 2 colunas lado a lado no PDF
+      const cols = clone.querySelector(".folha-liturgia-columns");
+      if (cols) {
+        cols.style.display = "grid";
+        cols.style.gridTemplateColumns = "1fr 1fr";
+        cols.style.gap = "32px";
+      }
+
+      // Elemento temporário invisível fora da viewport
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.top = "-9999px";
+      wrapper.style.left = "-9999px";
+      wrapper.style.width = "790px";
+      wrapper.style.background = "#ffffff";
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      const opt = {
+        margin: [10, 8, 10, 8],
+        filename: fileName,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      };
+
+      await html2pdf().set(opt).from(clone).save();
+      document.body.removeChild(wrapper);
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      window.print();
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   return (
     <>
@@ -231,14 +305,41 @@ export default function ChurchPage() {
                 intro={`Calendário litúrgico e escalas de celebrações de ${church.title}. Acompanhe os horários, dirigentes, ministros, equipes e coroinhas.`}
               >
                 <div className="folha-liturgia-actions">
-                  <button type="button" className="btn-print-escala" onClick={() => window.print()}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                    Imprimir Folha Litúrgica
+                  <button
+                    type="button"
+                    className="btn-print-escala"
+                    onClick={handleDownloadPdf}
+                    disabled={downloadingPdf}
+                  >
+                    {downloadingPdf ? (
+                      <>
+                        <svg className="spin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="2" x2="12" y2="6"></line>
+                          <line x1="12" y1="18" x2="12" y2="22"></line>
+                          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                          <line x1="2" y1="12" x2="6" y2="12"></line>
+                          <line x1="18" y1="12" x2="22" y2="12"></line>
+                          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                        </svg>
+                        Baixando PDF...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Baixar Escala (PDF)
+                      </>
+                    )}
                   </button>
                 </div>
 
                 <div className="folha-liturgia-container">
-                  <div className="folha-liturgia-paper">
+                  <div id="folha-liturgia-paper" className="folha-liturgia-paper">
                     <div className="folha-liturgia-header">
                       <h2 className="folha-liturgia-church-name">
                         {church.title?.toLowerCase().startsWith("comunidade") ? church.title : `Comunidade ${church.title}`}

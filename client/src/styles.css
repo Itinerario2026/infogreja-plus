@@ -5025,6 +5025,21 @@ input:focus,select:focus,textarea:focus{border-color:#cf8b58;box-shadow:0 0 0 3p
   box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2);
 }
 
+.btn-print-escala:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
 .folha-liturgia-container {
   display: flex;
   justify-content: center;
